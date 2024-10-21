@@ -1,0 +1,391 @@
+//Αναφορά Εντολής Αγοράς Ανα Κέντρο Κόστους
+
+SELECT
+ V."DocEntry" ,
+ V."DocNum" ,
+ V."CardCode" as "Κωδικός Προμηθευτή",
+ V."CardName" as "Επωνυμία",
+ V."LicTradNum" as "ΑΦΜ",
+ V."DocDate" ,
+ V."DocDueDate" ,
+ V."TaxDate" ,
+ V."NumAtCard" ,
+ V."OcrCode" ,
+ SUM(IFNULL(V."Invoice",0)) AS "Invoiced" ,
+ SUM(IFNULL(V."Reverse",0)) AS "RInvoiced",
+ ROUND((IFNULL(PO."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) AS "OpenAmnt",
+ PO."DocTotal" AS "DocTotal"
+FROM TKA_V_PURCHASE_ORDERS_CC_OPEN_AMOUNTS V
+INNER JOIN OPOR PO ON PO."DocEntry" = V."DocEntry"
+WHERE 1=1
+AND IFNULL(V."OcrCode",'') <> ''
+--AND V."SRC" = '4'
+--AND V."NumAtCard" = '21257499'
+--AND V."DocNum"= '100001374'
+--AND V."DocEntry" = '1522'
+GROUP BY
+ V."DocEntry" ,
+ V."DocNum" ,
+ V."CardCode",
+ V."CardName",
+ V."LicTradNum",
+ V."DocDate" ,
+ V."DocDueDate" ,
+ V."TaxDate" ,
+ V."NumAtCard" ,
+ V."OcrCode" ,
+ PO."DocTotal"
+
+ORDER BY V."DocNum"
+--------------------------------------------------------------------
+
+//Αναφορά Εντολής Αγοράς Ανα Κέντρο Κόστους_V2
+
+--Αναφορά Εντολής Αγοράς Ανά Κέντρο Κόστους
+--=============================================
+
+
+
+
+
+SELECT
+ V."DocEntry" ,
+ V."DocNum" AS "Αριθμός Παραστατικού",
+ V."CardCode" as "Κωδ. Πιστωτή",
+ V."CardName" as "Επωνυμία Πιστωτή",
+ V."LicTradNum" as "ΑΦΜ Πιστωτή",
+ XA6."GroupName" AS "Λογιστική ομάδα",
+ BP."U_TKA_XAPLU4" AS "XAPLU4 - Κωδικός" ,
+ XA4."Name"	AS "XAPLU4",
+ BP."U_TKA_XAPLU5" AS "XAPLU5 - Κωδικός",
+ XA5."Name"	AS "XAPLU5",
+ V."DocDate" AS "Ημ/νία Καταχώρησης" ,
+ V."DocDueDate" AS "Ημ/νία Λήξης",
+ V."TaxDate" AS "Ημ/νία Παραστατικού",
+ V."NumAtCard" AS "Αρ.Εντολής Αγοράς Intranet",
+ V."OcrCode" AS "Κανόνας Κατανομής",
+ SUM(IFNULL(V."Invoice",0)) AS "Invoiced" ,
+ SUM(IFNULL(V."Reverse",0)) AS "RInvoiced",
+ --ROUND(((IFNULL(PO."DocTotal",0) - PO."VatSum") - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) AS "OpenAmnt",
+ ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) AS "OpenAmnt",
+ CASE WHEN ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) <0 THEN 'ΥΠΕΡΒΑΣΗ' ELSE '' END AS "Υπέρβαση Δαπάνης",
+ CASE WHEN SUM(IFNULL(V."Invoice",0)) <> 0 THEN ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) / SUM(IFNULL(V."Invoice",0))
+ 	ELSE 0 END AS "% Υπέρβασης",
+ PO."DocStatus" AS "Status PO",
+ --SUM(IFNULL(V."DocTotal",0)) AS "DocTotal"
+IFNULL(V."DocTotal",0) AS "DocTotal"
+FROM TKA_V_PURCHASE_ORDERS_CC_OPEN_AMOUNTS_V6 V
+INNER JOIN OPOR PO ON PO."DocEntry" = V."DocEntry"
+INNER JOIN OCRD BP ON PO."CardCode" = BP."CardCode"
+LEFT JOIN "@TKA_XAPLU4" XA4 ON BP."U_TKA_XAPLU4" = XA4."Code"
+LEFT JOIN "@TKA_XAPLU5" XA5 ON BP."U_TKA_XAPLU5" = XA5."Code"
+LEFT JOIN OCRG XA6 ON BP."GroupCode" = XA6."GroupCode"
+WHERE 1=1
+AND PO."CANCELED" = 'N'
+AND IFNULL(V."OcrCode",'') <> ''
+
+GROUP BY
+ V."DocEntry" ,
+ V."DocNum" ,
+ V."CardCode",
+ V."CardName",
+ V."LicTradNum",
+ XA6."GroupName",
+ BP."U_TKA_XAPLU4",
+ BP."U_TKA_XAPLU5",
+ XA4."Name",
+ XA5."Name",
+ V."DocDate" ,
+ V."DocDueDate" ,	
+ V."TaxDate" ,
+ V."NumAtCard" ,
+ V."OcrCode" ,
+ V."DocTotal",
+ PO."DocStatus"
+
+ORDER BY V."DocNum";
+
+---------------------------------------------------------------------
+
+//Αναφορά Εντολής Αγοράς Ανα Κέντρο Κόστους_V3
+
+--Αναφορά Εντολής Αγοράς Ανά Κέντρο Κόστους
+--=============================================
+
+
+
+
+
+SELECT
+ V."DocEntry" ,
+ V."DocNum" AS "Αριθμός Παραστατικού",
+ V."CardCode" as "Κωδ. Πιστωτή",
+ V."CardName" as "Επωνυμία Πιστωτή",
+ V."LicTradNum" as "ΑΦΜ Πιστωτή",
+ XA6."GroupName" AS "Λογιστική ομάδα",
+ BP."U_TKA_XAPLU4" AS "XAPLU4 - Κωδικός" ,
+ XA4."Name"	AS "XAPLU4",
+ BP."U_TKA_XAPLU5" AS "XAPLU5 - Κωδικός",
+ XA5."Name"	AS "XAPLU5",
+ V."DocDate" AS "Ημ/νία Καταχώρησης" ,
+ V."DocDueDate" AS "Ημ/νία Λήξης",
+ V."TaxDate" AS "Ημ/νία Παραστατικού",
+ V."NumAtCard" AS "Αρ.Εντολής Αγοράς Intranet",
+ V."OcrCode" AS "Κανόνας Κατανομής",
+ SUM(IFNULL(V."Invoice",0)) AS "Invoiced" ,
+ SUM(IFNULL(V."Reverse",0)) AS "RInvoiced",
+ --ROUND(((IFNULL(PO."DocTotal",0) - PO."VatSum") - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) AS "OpenAmnt",
+ ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) AS "OpenAmnt",
+ CASE WHEN ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) <0 THEN 'ΥΠΕΡΒΑΣΗ' ELSE '' END AS "Υπέρβαση Δαπάνης",
+ CASE WHEN SUM(IFNULL(V."Invoice",0)) <> 0 THEN ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) / SUM(IFNULL(V."Invoice",0))
+ 	ELSE 0 END AS "% Υπέρβασης",
+ PO."DocStatus" AS "Status PO",
+ --SUM(IFNULL(V."DocTotal",0)) AS "DocTotal"
+IFNULL(V."DocTotal",0) AS "DocTotal"
+FROM TKA_V_PURCHASE_ORDERS_CC_OPEN_AMOUNTS_V9 V
+INNER JOIN OPOR PO ON PO."DocEntry" = V."DocEntry"
+INNER JOIN OCRD BP ON PO."CardCode" = BP."CardCode"
+LEFT JOIN "@TKA_XAPLU4" XA4 ON BP."U_TKA_XAPLU4" = XA4."Code"
+LEFT JOIN "@TKA_XAPLU5" XA5 ON BP."U_TKA_XAPLU5" = XA5."Code"
+LEFT JOIN OCRG XA6 ON BP."GroupCode" = XA6."GroupCode"
+WHERE 1=1
+AND PO."CANCELED" = 'N'
+AND IFNULL(V."OcrCode",'') <> ''
+
+GROUP BY
+ V."DocEntry" ,
+ V."DocNum" ,
+ V."CardCode",
+ V."CardName",
+ V."LicTradNum",
+ XA6."GroupName",
+ BP."U_TKA_XAPLU4",
+ BP."U_TKA_XAPLU5",
+ XA4."Name",
+ XA5."Name",
+ V."DocDate" ,
+ V."DocDueDate" ,	
+ V."TaxDate" ,
+ V."NumAtCard" ,
+ V."OcrCode" ,
+ V."DocTotal",
+ PO."DocStatus"
+
+ORDER BY V."DocNum";
+
+--------------------------------------------------------------------------------
+
+// Αναφορά Εντολής Αγοράς ανά Κέντρο Κόστους (Αναλυτική)
+
+--Αναφορά Εντολής Αγοράς Ανά Κέντρο Κόστους
+--=============================================
+
+
+SELECT
+ V."DocEntry" ,
+ V."DocNum" AS "Αριθμός Παραστατικού",
+ V."NumAtCard" AS "Αρ.Εντολής Αγοράς Intranet",
+ V."Number" AS "Αρ. Συλλογικής Σύμβασης",
+ V."CardCode" as "Κωδ. Πιστωτή",
+ V."CardName" as "Επωνυμία Πιστωτή",
+ V."LicTradNum" as "ΑΦΜ Πιστωτή",
+ XA6."GroupName" AS "Λογιστική ομάδα",
+ BP."U_TKA_XAPLU4" AS "XAPLU4 - Κωδικός" ,
+ XA4."Name"	AS "XAPLU4",
+ BP."U_TKA_XAPLU5" AS "XAPLU5 - Κωδικός",
+ XA5."Name"	AS "XAPLU5",
+ V."DocDate" ,
+ V."DocDueDate" ,
+ V."TaxDate" ,
+ P1."ItemCode" AS "Κωδικός Είδους",
+ P1."Dscription" AS "Περιγραφή Είδους",
+ P1."U_TKA_Dimosiopoisi" AS "Δημοσιοποίηση ΕΟΦ",
+CT."Code" AS "Κωδικός Κατηγορία Δαπάνης",
+ CT."Name" AS "Κατηγορία Δαπάνης",
+ PJ."PrjCode" AS "Κωδικός Event",
+ PJ."PrjName" AS "Event",
+ CF."Code" AS "Κωδικός Τύπου Συνεδρίου",
+ CF."Name" AS "Τύπος Συνεδρίου", 
+ PR."PrjCode" AS "Κωδικός Project",
+ PR."PrjName" AS "Project",
+ DP."Code" AS "Κωδικός Δαπάνες Φορολογικής Υπερέκπτωσης",
+ DP."Name" AS "Δαπάνες Φορολογικής Υπερέκπτωσης",
+ V."OcrCode" ,
+rc."PrcName",
+he."lastName"||' '||he."firstName" as "Διεκπεραιωτής της Εντολής Αγοράς", ----DK
+ SUM(IFNULL(V."Invoice",0)) AS "Invoiced" ,
+ SUM(IFNULL(V."Reverse",0)) AS "RInvoiced",
+ ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) AS "OpenAmnt",
+ CASE WHEN ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) <0 THEN 'ΥΠΕΡΒΑΣΗ' ELSE '' END AS "Υπέρβαση Δαπάνης",
+ CASE WHEN SUM(IFNULL(V."Invoice",0)) <> 0 THEN ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) / SUM(IFNULL(V."Invoice",0))
+ 	ELSE 0 END AS "% Υπέρβασης",
+ PO."DocStatus" AS "Status PO",
+ IFNULL(V."DocTotal",0) AS "DocTotal"
+FROM TKA_V_PURCHASE_ORDERS_CC_OPEN_AMOUNTS_V6 V
+INNER JOIN OPOR PO ON PO."DocEntry" = V."DocEntry"
+INNER JOIN POR1 P1 ON P1."DocEntry" = PO."DocEntry" AND P1."LineNum"= V."LineNum"
+INNER JOIN OCRD BP ON PO."CardCode" = BP."CardCode"
+LEFT JOIN "@TKA_XAPLU4" XA4 ON BP."U_TKA_XAPLU4" = XA4."Code"
+LEFT JOIN "@TKA_XAPLU5" XA5 ON BP."U_TKA_XAPLU5" = XA5."Code"
+LEFT JOIN OCRG XA6 ON BP."GroupCode" = XA6."GroupCode"
+LEFT JOIN "@TKA_CATEXPENSE" CT ON CT."Code" = P1."U_TKA_CatDapanis"
+LEFT JOIN "OPRJ" PJ ON PJ."PrjCode" = P1."U_TKA_Event"
+LEFT JOIN "OPRJ" PR ON PR."PrjCode" = P1."Project"
+LEFT JOIN "@TKA_TYP_SUNEDRIOU" CF ON CF."Code" = P1."U_TKA_TyposSunedriou"
+LEFT JOIN "@TKA_DAPANES" DP ON DP."Code" = P1."U_TKA_DAPANES"
+left join ohem he on he."empID"= PO."OwnerCode"  ----DK
+left join oprc rc on rc."PrcCode" =v."OcrCode"
+WHERE 1=1
+AND PO."CANCELED" = 'N'
+AND IFNULL(V."OcrCode",'') <> ''
+--AND (BP."CardCode" = '[%0]' OR IFNULL('[%0]', '') = '')
+--AND (BP."CardCode" = '[%1]' OR IFNULL('[%1]', '') = '')
+AND BP."CardCode" BETWEEN '[%0]' AND '[%1]'
+AND (BP."LicTradNum" = '[%2]' OR IFNULL('[%2]','') = '')
+
+GROUP BY
+ V."DocEntry" ,
+ V."DocNum" ,
+ V."NumAtCard",
+ V."Number",
+ V."CardCode",
+ V."CardName",
+ V."LicTradNum",
+ XA6."GroupName",
+ BP."U_TKA_XAPLU4",
+ BP."U_TKA_XAPLU5",
+ XA4."Name",
+ XA5."Name",
+ V."DocDate" ,
+ V."DocDueDate" ,	
+ V."TaxDate" ,
+ P1."ItemCode",
+ P1."Dscription",
+ P1."U_TKA_Dimosiopoisi",
+ CT."Code",
+ CT."Name",
+ PJ."PrjCode",
+ PJ."PrjName",
+ CF."Code",
+ CF."Name",
+ PR."PrjCode" ,
+ PR."PrjName" ,
+ DP."Code",
+ DP."Name",
+ V."OcrCode" ,
+rc."PrcName",
+HE."firstName",
+he."lastName",
+ V."DocTotal",
+ PO."DocStatus"
+
+ORDER BY V."DocNum";
+
+---------------------------------------------------------------------------
+
+// Αναφορά Εντολής Αγοράς ανά Κέντρο Κόστους (Αναλυτική)_V2
+
+--Αναφορά Εντολής Αγοράς Ανά Κέντρο Κόστους
+--=============================================
+
+
+
+
+SELECT
+ V."DocEntry" ,
+ V."DocNum" AS "Αριθμός Παραστατικού",
+ V."NumAtCard" AS "Αρ.Εντολής Αγοράς Intranet",
+ V."Number" AS "Αρ. Συλλογικής Σύμβασης",
+ V."CardCode" as "Κωδ. Πιστωτή",
+ V."CardName" as "Επωνυμία Πιστωτή",
+ V."LicTradNum" as "ΑΦΜ Πιστωτή",
+ XA6."GroupName" AS "Λογιστική ομάδα",
+ BP."U_TKA_XAPLU4" AS "XAPLU4 - Κωδικός" ,
+ XA4."Name"	AS "XAPLU4",
+ BP."U_TKA_XAPLU5" AS "XAPLU5 - Κωδικός",
+ XA5."Name"	AS "XAPLU5",
+ V."DocDate" ,
+ V."DocDueDate" ,
+ V."TaxDate" ,
+ V."ItemCode" AS "Κωδικός Είδους",
+ V."Dscription" AS "Περιγραφή Είδους",
+ V."U_TKA_Dimosiopoisi" AS "Δημοσιοποίηση ΕΟΦ",
+CT."Code" AS "Κωδικός Κατηγορία Δαπάνης",
+ CT."Name" AS "Κατηγορία Δαπάνης",
+ PJ."PrjCode" AS "Κωδικός Event",
+ PJ."PrjName" AS "Event",
+ CF."Code" AS "Κωδικός Τύπου Συνεδρίου",
+ CF."Name" AS "Τύπος Συνεδρίου", 
+ PR."PrjCode" AS "Κωδικός Project",
+ PR."PrjName" AS "Project",
+ DP."Code" AS "Κωδικός Δαπάνες Φορολογικής Υπερέκπτωσης",
+ DP."Name" AS "Δαπάνες Φορολογικής Υπερέκπτωσης",
+ V."OcrCode" ,
+rc."PrcName",
+he."lastName"||' '||he."firstName" as "Διεκπεραιωτής της Εντολής Αγοράς", ----DK
+ SUM(IFNULL(V."Invoice",0)) AS "Invoiced" ,
+ SUM(IFNULL(V."Reverse",0)) AS "RInvoiced",
+ ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) AS "OpenAmnt",
+ CASE WHEN ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) <0 THEN 'ΥΠΕΡΒΑΣΗ' ELSE '' END AS "Υπέρβαση Δαπάνης",
+ CASE WHEN SUM(IFNULL(V."Invoice",0)) <> 0 THEN ROUND((IFNULL(V."DocTotal",0) - SUM(IFNULL(V."Invoice",0)) - SUM(IFNULL(V."Reverse",0))),2) / SUM(IFNULL(V."Invoice",0))
+ 	ELSE 0 END AS "% Υπέρβασης",
+ PO."DocStatus" AS "Status PO",
+ IFNULL(V."DocTotal",0) AS "DocTotal"
+FROM TKA_V_PURCHASE_ORDERS_CC_OPEN_AMOUNTS_ANALYTIC V
+INNER JOIN OPOR PO ON PO."DocEntry" = V."DocEntry"
+INNER JOIN OCRD BP ON PO."CardCode" = BP."CardCode"
+LEFT JOIN "@TKA_XAPLU4" XA4 ON BP."U_TKA_XAPLU4" = XA4."Code"
+LEFT JOIN "@TKA_XAPLU5" XA5 ON BP."U_TKA_XAPLU5" = XA5."Code"
+LEFT JOIN OCRG XA6 ON BP."GroupCode" = XA6."GroupCode"
+LEFT JOIN "@TKA_CATEXPENSE" CT ON CT."Code" = V."U_TKA_CatDapanis"
+LEFT JOIN "OPRJ" PJ ON PJ."PrjCode" = V."U_TKA_Event"
+LEFT JOIN "OPRJ" PR ON PR."PrjCode" = V."Project"
+LEFT JOIN "@TKA_TYP_SUNEDRIOU" CF ON CF."Code" = V."U_TKA_TyposSunedriou"
+LEFT JOIN "@TKA_DAPANES" DP ON DP."Code" = V."U_TKA_DAPANES"
+left join ohem he on he."empID"= PO."OwnerCode"  ----DK
+left join oprc rc on rc."PrcCode" =v."OcrCode"
+WHERE 1=1
+AND PO."CANCELED" = 'N'
+AND IFNULL(V."OcrCode",'') <> ''
+--AND (BP."CardCode" = '[%0]' OR IFNULL('[%0]', '') = '')
+--AND (BP."CardCode" = '[%1]' OR IFNULL('[%1]', '') = '')
+AND BP."CardCode" BETWEEN '[%0]' AND '[%1]'
+AND (BP."LicTradNum" = '[%2]' OR IFNULL('[%2]','') = '')
+
+GROUP BY
+ V."DocEntry" ,
+ V."DocNum" ,
+ V."NumAtCard",
+ V."Number",
+ V."CardCode",
+ V."CardName",
+ V."LicTradNum",
+ XA6."GroupName",
+ BP."U_TKA_XAPLU4",
+ BP."U_TKA_XAPLU5",
+ XA4."Name",
+ XA5."Name",
+ V."DocDate" ,
+ V."DocDueDate" ,	
+ V."TaxDate" ,
+ V."ItemCode",
+ V."Dscription",
+ V."U_TKA_Dimosiopoisi",
+ CT."Code",
+ CT."Name",
+ PJ."PrjCode",
+ PJ."PrjName",
+ CF."Code",
+ CF."Name",
+ PR."PrjCode" ,
+ PR."PrjName" ,
+ DP."Code",
+ DP."Name",
+ V."OcrCode" ,
+rc."PrcName",
+HE."firstName",
+he."lastName",
+ V."DocTotal",
+ PO."DocStatus"
+
+ORDER BY V."DocNum";

@@ -1,0 +1,163 @@
+CREATE VIEW "PHAR_PROD"."TKA_V_PROTYPIARXEIO" ( "Σειρά",
+	 "Κλειδί Σύμβασης",
+	 "Αρ. Σύμβασης",
+	 "Περιγραφή Σύμβασης",
+	 "Ημερομηνία Υπογραφής",
+	 "Ημερομηνία Λήξης",
+	 "Αξία Σύμβασης",
+	 "Τροποποιήσεις",
+	 "Event/ MRT",
+	 "Project code",
+	 "Αρ. Πρωτ. ",
+	 "Ημερ/νία Πρωτ.",
+	 "Αρ. Σύμβασης Τροποποίησης",
+	 "Κωδ. Συμβαλ",
+	 "Παλαιός Κωδ. Συμβαλ",
+	 "Α.Φ.Μ.",
+	 "Επωνυμία",
+	 "Αντικείμενο Συμφωνητικού",
+	 "Ποσό Συμφωνητικού",
+	 "Παρατηρήσεις",
+	 "Εμπρόθεσμη",
+	 "Ολοκληρωμένη",
+	 "Υποβολή ΑΑΔΕ",
+	 "Τροποποιητική",
+	 "Αρχική Σύμβαση",
+	 "Ημερ/νία Αρχικής Σύμβασης" ) AS SELECT
+	 T2."SeriesName" AS "Σειρά",
+	 T0."AbsID" AS "Κλειδί Σύμβασης",
+	 T0."Number" AS "Αρ. Σύμβασης",
+	 T0."Descript" AS "Περιγραφή Σύμβασης",
+	 T0."SignDate" AS "Ημερομηνία Υπογραφής",
+	 --T0."StartDate" AS "Ημερ/νία Έναρξης Συμφωνητικού", 
+T0."EndDate" AS "Ημερομηνία Λήξης",
+	 T0."U_TKA_Value" AS "Αξία Σύμβασης",
+	 null AS "Τροποποιήσεις",
+	 T0."U_TKA_Project2" AS "Event/ MRT",
+	 T0."Project" AS "Project code",
+	 T0."U_TKA_AA" AS "Αρ. Πρωτ. ",
+	 T0."U_TKA_AADate" AS "Ημερ/νία Πρωτ.",
+	 IFNULL(T3."Number",
+	 0) AS "Αρ. Σύμβασης Τροποποίησης",
+	 T0."BpCode" AS "Κωδ. Συμβαλ",
+	 T1."U_TKA_OldCode" AS "Παλαιός Κωδ. Συμβαλ",
+	 T1."LicTradNum" AS "Α.Φ.Μ.",
+	 T1."CardName" AS "Επωνυμία",
+	 T0."U_TKA_Content" AS "Αντικείμενο Συμφωνητικού",
+	 T0."U_TKA_Value" AS "Ποσό Συμφωνητικού",
+	 T0."Remarks" AS "Παρατηρήσεις",
+	 T0."U_TKA_Ebrothesmi" AS "Εμπρόθεσμη",
+	 T0."U_TKA_Finished" AS "Ολοκληρωμένη",
+	 T0."U_TKA_AADE" AS "Υποβολή ΑΑΔΕ",
+	 T0."U_TKA_Tropopoihtiko" AS "Τροποποιητική",
+	 T0."U_TKA_Arxiki_Sumvasi_Promitheiwn" AS "Αρχική Σύμβαση",
+	 T0."U_TKA_BADate" AS "Ημερ/νία Αρχικής Σύμβασης" 
+FROM OOAT T0 
+INNER JOIN OCRD T1 ON T0."BpCode" = T1."CardCode" 
+INNER JOIN NNM1 T2 ON T0."Series"= T2."Series" 
+LEFT JOIN (SELECT
+	 T0."Number",
+	 T0."U_TKA_Tropopoihtiko",
+	 T0."U_TKA_BADate",
+	 T0."U_TKA_Arxiki_Sumvasi_Promitheiwn" 
+	FROM OOAT T0 
+	INNER JOIN OCRD T1 ON T0."BpCode" = T1."CardCode" 
+	WHERE T1."CardType"= 'S' 
+	AND T0."Cancelled"= 'N') T3 ON T0."Number"= T3."U_TKA_Arxiki_Sumvasi_Promitheiwn" 
+WHERE T1."CardType"= 'S' 
+AND T0."TermDate" IS NULL 
+AND T0."Cancelled"= 'N' 
+ORDER BY T0."BpCode" WITH READ ONLY
+
+--------------------------------------------------------------------------------
+
+CREATE VIEW "PHAR_PROD"."TKA_V_PROTYPIPROMITHIES" ( "Κλειδί Σύμβασης",
+	 "Αρ. Συλλογικής Σύμβασης",
+	 "Αρ. Εγγραφής",
+	 "Kleidi Eggrafis",
+	 "Typos Eggrafis",
+	 "Ημ/νία Εγγραφής",
+	 "Κωδ. Συν/μένου",
+	 "Α.Φ.Μ.",
+	 "Κωδ. Λογαριασμού Γ/Λ",
+	 "Συν. Αξία Δαπάνης",
+	 "Συν. Αξία ΦΠΑ",
+	 "Σύνολο_Δαπάνης (Γραμμής)" ) AS SELECT
+	 IFNULL("Κλειδί Σύμβασης",
+	 0) AS "Κλειδί Σύμβασης",
+	 IFNULL("Αρ. Συλλογικής Σύμβασης",
+	 0) AS "Αρ. Συλλογικής Σύμβασης",
+	 "Αρ. Εγγραφής",
+	 "Kleidi Eggrafis",
+	 "Typos Eggrafis",
+	 "Ημ/νία Εγγραφής",
+	 "Κωδ. Συν/μένου",
+	 IFNULL("Α.Φ.Μ.",
+	 '') AS "Α.Φ.Μ.",
+	 "Κωδ. Λογαριασμού Γ/Λ",
+	 SUM("Συν_Αξία_Δαπάνης") AS "Συν. Αξία Δαπάνης",
+	 SUM("Συν_Αξία_ΦΠΑ") AS "Συν. Αξία ΦΠΑ",
+	 SUM("Σύνολο_Δαπάνης (Γραμμής)") AS "Σύνολο_Δαπάνης (Γραμμής)" 
+FROM ( SELECT
+	 CASE WHEN T2."Number" IS NULL 
+	THEN T4."AbsID" 
+	ELSE T1."U_TKA_AgrNo" 
+	END AS "Κλειδί Σύμβασης",
+	 CASE WHEN T2."Number" IS NULL 
+	THEN T4."Number" 
+	ELSE T2."Number" 
+	END AS "Αρ. Συλλογικής Σύμβασης",
+	 T0."DocNum" AS "Αρ. Εγγραφής",
+	 t0."DocEntry" as "Kleidi Eggrafis",
+	 t0."ObjType" as "Typos Eggrafis",
+	 T0."TaxDate" AS "Ημ/νία Εγγραφής",
+	 T0."CardCode" AS "Κωδ. Συν/μένου",
+	 T3."LicTradNum" AS "Α.Φ.Μ.",
+	 T1."AcctCode" AS "Κωδ. Λογαριασμού Γ/Λ",
+	 T1."LineTotal" AS "Συν_Αξία_Δαπάνης",
+	 T1."LineVat" AS "Συν_Αξία_ΦΠΑ",
+	 (T1."LineTotal"+T1."LineVat") AS "Σύνολο_Δαπάνης (Γραμμής)" --(T0."DocTotal"-T0."VatSum"+T0."WTSum") AS "Συν. Αξία Δαπάνης",
+ 
+	FROM OPCH T0 
+	INNER JOIN PCH1 T1 ON T0."DocEntry" = T1."DocEntry" 
+	AND T1."U_TKA_AgrNo" IS NOT NULL 
+	LEFT JOIN OOAT T2 ON T1."U_TKA_AgrNo"= T2."AbsID" 
+	INNER JOIN OCRD T3 ON T0."CardCode"= T3."CardCode" 
+	LEFT JOIN OOAT T4 ON T1."U_TKA_AgrNo"= T4."Number" 
+	WHERE T0."CANCELED"= 'N' 
+	UNION ALL SELECT
+	 CASE WHEN T2."Number" IS NULL 
+	THEN T4."AbsID" 
+	ELSE T1."U_TKA_AgrNo" 
+	END AS "Κλειδί Σύμβασης",
+	 CASE WHEN T2."Number" IS NULL 
+	THEN T4."Number" 
+	ELSE T2."Number" 
+	END AS "Αρ. Συλλογικής Σύμβασης",
+	 T0."DocNum" AS "Αρ. Εγγραφής",
+	 t0."DocEntry" as "Kleidi Eggrafis",
+	 t0."ObjType" as "Typos Eggrafis",
+	 T0."TaxDate" AS "Ημ/νία Εγγραφής",
+	 T0."CardCode" AS "Κωδ. Συν/μένου",
+	 T3."LicTradNum" AS "Α.Φ.Μ.",
+	 T1."AcctCode" AS "Κωδ. Λογαριασμού Γ/Λ",
+	 -T1."LineTotal" AS "Συν_Αξία_Δαπάνης",
+	 -T1."LineVat" AS "Συν_Αξία_ΦΠΑ",
+	 -(T1."LineTotal"+T1."LineVat") AS "Σύνολο_Δαπάνης (Γραμμής)" ---(T0."DocTotal"-T0."VatSum"+T0."WTSum") AS "Συν. Αξία Δαπάνης",
+ 
+	FROM ORPC T0 
+	INNER JOIN RPC1 T1 ON T0."DocEntry" = T1."DocEntry" 
+	AND T1."U_TKA_AgrNo" IS NOT NULL 
+	LEFT JOIN OOAT T2 ON T1."U_TKA_AgrNo"= T2."AbsID" 
+	INNER JOIN OCRD T3 ON T0."CardCode"= T3."CardCode" 
+	LEFT JOIN OOAT T4 ON T1."U_TKA_AgrNo"= T4."Number" 
+	WHERE T0."CANCELED"= 'N' ) 
+GROUP BY "Κλειδί Σύμβασης",
+	 "Αρ. Συλλογικής Σύμβασης",
+	 "Αρ. Εγγραφής",
+	 "Kleidi Eggrafis",
+	 "Typos Eggrafis",
+	 "Ημ/νία Εγγραφής",
+	 "Κωδ. Συν/μένου",
+	 "Α.Φ.Μ.",
+	 "Κωδ. Λογαριασμού Γ/Λ" WITH READ ONLY

@@ -1,0 +1,438 @@
+CREATE VIEW "PHAR_PROD"."ZTKA_V_EOF" ( "DOCDATE",
+	 "PARASTATIKO",
+	 "BARCODE",
+	 "LOT",
+	 "QUANTITY",
+	 "PRICE",
+	 "AFM",
+	 "DEFAULT_DISC",
+	 "SECOND_DISC",
+	 "THIRD_DISC",
+	 "WHS",
+	 "NoInvtryMv" ) AS SELECT
+	 "DOCDATE",
+	 "PARASTATIKO",
+	 "BARCODE",
+	 "LOT",
+	 SUM("QUANTITY") AS "QUANTITY",
+	 "PRICE" AS "PRICE",
+	 "AFM",
+	 "DEFAULT_DISC",
+	 "SECOND_DISC",
+	 "THIRD_DISC",
+	 "WHS",
+	 "NoInvtryMv" 
+FROM (select
+	 cast(h."DocDate" as Date) as DOCDATE,
+	 n."SeriesName" || ' ' || h."DocNum" as PARASTATIKO,
+	 case when t."CodeBars" is not NULL 
+	then t."CodeBars" -----NEW 20/12/2022
+ when l."CodeBars" is not NULL 
+	then l."CodeBars" -----NEW 20/12/2022
+ 
+	else d."CodeBars" 
+	end as BARCODE,
+	 case when t."Lot" is not NULL 
+	then t."Lot" -----NEW 20/12/2022
+ when l."Lot" is not NULL 
+	then l."Lot" -----NEW 20/12/2022
+ 
+	else v."Lot" 
+	end as LOT,
+	 cast(case when t."Quantity" is not NULL 
+		then t."Quantity" -----NEW 20/12/2022
+ when l."Quantity" is not NULL 
+		then l."Quantity" -----NEW 20/12/2022
+ 
+		else (-V."Quantity") 
+		end as int) as QUANTITY,
+	 d."PriceBefDi" as PRICE,
+	 SUBSTRING (c."LicTradNum",
+	 3,
+	 10) as AFM,
+	 case when IFNULL(d."U_TKA_Discount1",
+	 0) in (0,
+	 5,
+	 6.5) 
+	then IFNULL(d."U_TKA_Discount1",
+	 0) 
+	else 0 
+	end as DEFAULT_DISC,
+	 case when IFNULL(d."U_TKA_Discount1",
+	 0) not in (0,
+	 5,
+	 6.5) 
+	then IFNULL(d."U_TKA_Discount2",
+	 0) + IFNULL(d."U_TKA_Discount1",
+	 0) 
+	else IFNULL(d."U_TKA_Discount2",
+	 0) 
+	end as SECOND_DISC,
+	 IFNULL(d."U_TKA_Discount3",
+	 0) as THIRD_DISC ,
+	 case when (d."WhsCode"= '014' 
+		and l."Quantity" is not NULL) 
+	then '100' 
+	else d."WhsCode" 
+	end as WHS,
+	 'N' AS "NoInvtryMv" 
+	from "OINV" h join "NNM1" n on h."Series" = n."Series" join "INV1" d on h."DocEntry" = d."DocEntry" join "OCRD" c on h."CardCode" = c."CardCode" join "OITM" i on d."ItemCode" = i."ItemCode" 
+	left join "ZTKA_LILLY_LOTS" V on d."DocEntry" = V."DocEntry" 
+	and d."ObjType" = V."TransType" 
+	and d."LineNum" = V."DocLineNum" 
+	and d."WhsCode" = V."LocCode" 
+	and d."ItemCode" = V."ItemCode" 
+	left join (select
+	 d."DocEntry",
+	 d."ObjType",
+	 d."LineNum",
+	 -V."Quantity" as "Quantity",
+	 d."CodeBars",
+	 v."Lot" 
+		from "DLN1" d 
+		left join "ZTKA_LILLY_LOTS" V on d."DocEntry" = V."DocEntry" 
+		and d."ObjType" = V."TransType" 
+		and d."LineNum" = V."DocLineNum" 
+		and d."WhsCode" = V."LocCode" 
+		and d."ItemCode" = V."ItemCode" ) t on d."BaseType" = t."ObjType" 
+	and d."BaseEntry" = t."DocEntry" 
+	and d."BaseLine" = t."LineNum" -------NEW 20/12/2022
+ 
+	left join (select
+	 d."DocEntry",
+	 d."ObjType",
+	 d."LineNum",
+	 -V."Quantity" as "Quantity",
+	 d."CodeBars",
+	 v."Lot" 
+		from "DLN1" d 
+		left join "ZTKA_LILLY_LOTS" V on d."DocEntry" = V."DocEntry" 
+		and d."ObjType" = V."TransType" 
+		and d."LineNum" = V."DocLineNum" 
+		and d."WhsCode" = V."LocCode" 
+		and d."ItemCode" = V."ItemCode" ) l on d."U_BaseType" = l."ObjType" 
+	and d."U_BaseEntry" = l."DocEntry" 
+	and d."U_BaseLine" = l."LineNum" -------NEW 20/12/2022
+ 
+	where i."QryGroup6" = 'Y' 
+	and h."CANCELED" = 'N' 
+	and c."GroupCode" = '123' 
+	UNION ALL select
+	 cast(h."DocDate" as Date) as DOCDATE,
+	 n."SeriesName" || ' ' || h."DocNum" as PARASTATIKO,
+	 case when t."CodeBars" is not NULL 
+	then t."CodeBars" 
+	else d."CodeBars" 
+	end as BARCODE,
+	 case when t."Lot" is not NULL 
+	then t."Lot" 
+	else v."Lot" 
+	end as LOT,
+	 cast(case when t."Quantity" is not NULL 
+		then t."Quantity" 
+		else V."Quantity" 
+		end as int) as QUANTITY,
+	 d."PriceBefDi" as PRICE,
+	 SUBSTRING (c."LicTradNum",
+	 3,
+	 10) as AFM,
+	 case when IFNULL(d."U_TKA_Discount1",
+	 0) in (0,
+	 5,
+	 6.5) 
+	then IFNULL(d."U_TKA_Discount1",
+	 0) 
+	else 0 
+	end as DEFAULT_DISC,
+	 case when IFNULL(d."U_TKA_Discount1",
+	 0) not in (0,
+	 5,
+	 6.5) 
+	then IFNULL(d."U_TKA_Discount2",
+	 0) + IFNULL(d."U_TKA_Discount1",
+	 0) 
+	else IFNULL(d."U_TKA_Discount2",
+	 0) 
+	end as SECOND_DISC,
+	 IFNULL(d."U_TKA_Discount3",
+	 0) as THIRD_DISC ,
+	 d."WhsCode" as WHS,
+	 d."NoInvtryMv" AS "NoInvtryMv" 
+	from "ORIN" h join "NNM1" n on h."Series" = n."Series" join "RIN1" d on h."DocEntry" = d."DocEntry" join "OCRD" c on h."CardCode" = c."CardCode" join "OITM" i on d."ItemCode" = i."ItemCode" 
+	left join "ZTKA_LILLY_LOTS" V on d."DocEntry" = V."DocEntry" 
+	and d."ObjType" = V."TransType" 
+	and d."LineNum" = V."DocLineNum" 
+	and d."WhsCode" = V."LocCode" 
+	and d."ItemCode" = V."ItemCode" 
+	left join (select
+	 d."DocEntry",
+	 d."ObjType",
+	 d."LineNum",
+	 V."Quantity",
+	 d."CodeBars",
+	 v."Lot" 
+		from "RDN1" d 
+		left join "ZTKA_LILLY_LOTS" V on d."DocEntry" = V."DocEntry" 
+		and d."ObjType" = V."TransType" 
+		and d."LineNum" = V."DocLineNum" 
+		and d."WhsCode" = V."LocCode" 
+		and d."ItemCode" = V."ItemCode" ) t on d."BaseType" = t."ObjType" 
+	and d."BaseEntry" = t."DocEntry" 
+	and d."BaseLine" = t."LineNum" 
+	where i."QryGroup6" = 'Y' 
+	and h."CANCELED" = 'N' 
+	and c."GroupCode" = '123' ) t1 
+GROUP BY "DOCDATE",
+	 "PARASTATIKO",
+	 "BARCODE",
+	 "LOT",
+	 "PRICE",
+	 "AFM",
+	 "DEFAULT_DISC",
+	 "SECOND_DISC",
+	 "THIRD_DISC",
+	 "WHS",
+	 "NoInvtryMv" WITH READ ONLY
+
+----------------------------------------------------------------------------------------------------
+
+CREATE VIEW "PHAR_PROD"."ZTKA_V_EOF_V03" ( "DOCDATE",
+	 "PARASTATIKO",
+	 "BARCODE",
+	 "LOT",
+	 "QUANTITY",
+	 "PRICE",
+	 "AFM",
+	 "DEFAULT_DISC",
+	 "SECOND_DISC",
+	 "THIRD_DISC",
+	 "WHS",
+	 "NoInvtryMv" ) AS SELECT
+	 "DOCDATE",
+	 "PARASTATIKO",
+	 "BARCODE",
+	 "LOT",
+	 SUM("QUANTITY") AS "QUANTITY",
+	 "PRICE" AS "PRICE",
+	 "AFM",
+	 "DEFAULT_DISC",
+	 "SECOND_DISC",
+	 "THIRD_DISC",
+	 "WHS",
+	 "NoInvtryMv" 
+FROM ( select
+	 cast(h."DocDate" as Date) as DOCDATE,
+	 n."SeriesName" || ' ' || h."DocNum" as PARASTATIKO,
+	 case when t."CodeBars" is not NULL 
+	then t."CodeBars" -----NEW 20/12/2022
+ when l."CodeBars" is not NULL 
+	then l."CodeBars" -----NEW 20/12/2022
+ 
+	else d."CodeBars" 
+	end as BARCODE,
+	 case when t."Lot" is not NULL 
+	then t."Lot" -----NEW 20/12/2022
+ when l."Lot" is not NULL 
+	then l."Lot" -----NEW 20/12/2022
+ 
+	else v."Lot" 
+	end as LOT,
+	 cast(case when t."Quantity" is not NULL 
+		then t."Quantity" -----NEW 20/12/2022
+ when l."Quantity" is not NULL 
+		then l."Quantity" -----NEW 20/12/2022
+ 
+		else (-V."Quantity") 
+		end as int) as QUANTITY,
+	 d."PriceBefDi" as PRICE,
+	 SUBSTRING (c."LicTradNum",
+	 3,
+	 10) as AFM,
+	 IFNULL(d."U_TKA_Discount1",
+	 0) as DEFAULT_DISC,
+	 /*case when IFNULL(d."U_TKA_Discount1",
+	 0) in (0,
+	 5,
+	 6.5) 
+	then IFNULL(d."U_TKA_Discount1",
+	 0) 
+	else 0 
+	end as DEFAULT_DISC,
+	*/ /*case when IFNULL(d."U_TKA_Discount1",
+	 0) not in (0,
+	 5,
+	 6.5) 
+	then IFNULL(d."U_TKA_Discount3",
+	 0) + IFNULL(d."U_TKA_Discount2",
+	 0) + IFNULL(d."U_TKA_SalesDiscount",
+	 0) 
+	else IFNULL(d."U_TKA_Discount2",
+	 0) */ IFNULL(d."U_TKA_Discount3",
+	 0) + IFNULL(d."U_TKA_Discount2",
+	 0) + IFNULL(d."U_TKA_SalesDiscount",
+	 0) as SECOND_DISC,
+	 --end as SECOND_DISC,
+ IFNULL(tt."Number",
+	 0) as THIRD_DISC ,
+	 case when (d."WhsCode"= '014' 
+		and l."Quantity" is not NULL) 
+	then '100' 
+	else d."WhsCode" 
+	end as WHS,
+	 'N' AS "NoInvtryMv" 
+	from "OINV" h join "NNM1" n on h."Series" = n."Series" join "INV1" d on h."DocEntry" = d."DocEntry" join "OCRD" c on h."CardCode" = c."CardCode" join "OITM" i on d."ItemCode" = i."ItemCode" 
+	left join "ZTKA_LILLY_LOTS" V on d."DocEntry" = V."DocEntry" 
+	and d."ObjType" = V."TransType" 
+	and d."LineNum" = V."DocLineNum" 
+	and d."WhsCode" = V."LocCode" 
+	and d."ItemCode" = V."ItemCode" 
+	left join "OOAT" tt on tt."AbsID" = d."AgrNo" --AND tt."Status"= N'A'
+ 
+	left join "OAT1" T1 ON tt."AbsID" = T1."AgrNo" 
+	AND T1."ItemCode"= d."ItemCode" 
+	left join (select
+	 d."DocEntry",
+	 d."ObjType",
+	 d."LineNum",
+	 -V."Quantity" as "Quantity",
+	 d."CodeBars",
+	 v."Lot" 
+		from "DLN1" d 
+		left join "ZTKA_LILLY_LOTS" V on d."DocEntry" = V."DocEntry" 
+		and d."ObjType" = V."TransType" 
+		and d."LineNum" = V."DocLineNum" 
+		and d."WhsCode" = V."LocCode" 
+		and d."ItemCode" = V."ItemCode" ) t on d."BaseType" = t."ObjType" 
+	and d."BaseEntry" = t."DocEntry" 
+	and d."BaseLine" = t."LineNum" -------NEW 20/12/2022
+ 
+	left join (select
+	 d."DocEntry",
+	 d."ObjType",
+	 d."LineNum",
+	 -V."Quantity" as "Quantity",
+	 d."CodeBars",
+	 v."Lot" 
+		from "DLN1" d 
+		left join "ZTKA_LILLY_LOTS" V on d."DocEntry" = V."DocEntry" 
+		and d."ObjType" = V."TransType" 
+		and d."LineNum" = V."DocLineNum" 
+		and d."WhsCode" = V."LocCode" 
+		and d."ItemCode" = V."ItemCode" ) l on d."U_BaseType" = l."ObjType" 
+	and d."U_BaseEntry" = l."DocEntry" 
+	and d."U_BaseLine" = l."LineNum" -------NEW 20/12/2022
+ 
+	where i."QryGroup6" = 'Y' 
+	and h."CANCELED" = 'N' 
+	and c."GroupCode" = '123' 
+	UNION all select
+	 cast(h."DocDate" as Date) as DOCDATE,
+	 n."SeriesName" || ' ' || h."DocNum" as PARASTATIKO,
+	 case when t."CodeBars" is not NULL 
+	then t."CodeBars" 
+	else d."CodeBars" 
+	end as BARCODE,
+	 case when t."Lot" is not NULL 
+	then t."Lot" 
+	else v."Lot" 
+	end as LOT,
+	 cast(case when t."Quantity" is not NULL 
+		then t."Quantity" 
+		else V."Quantity" 
+		end as int) as QUANTITY,
+	 d."PriceBefDi" as PRICE,
+	 SUBSTRING (c."LicTradNum",
+	 3,
+	 10) as AFM,
+	 IFNULL(d."U_TKA_Discount1",
+	 0) as DEFAULT_DISC,
+	 /*case when IFNULL(d."U_TKA_Discount1",
+	 0) in (0,
+	 5,
+	 6.5) 
+	then IFNULL(d."U_TKA_Discount1",
+	 0) 
+	else 0 
+	end as DEFAULT_DISC,
+	*/ /*case when IFNULL(d."U_TKA_Discount1",
+	 0) not in (0,
+	 5,
+	 6.5) 
+	then IFNULL(d."U_TKA_Discount3",
+	 0) + IFNULL(d."U_TKA_Discount2",
+	 0) + IFNULL(d."U_TKA_SalesDiscount",
+	 0) 
+	else IFNULL(d."U_TKA_Discount2",
+	 0)*/ IFNULL(d."U_TKA_Discount3",
+	 0) + IFNULL(d."U_TKA_Discount2",
+	 0) + IFNULL(d."U_TKA_SalesDiscount",
+	 0) as SECOND_DISC,
+	 --end as SECOND_DISC,
+ IFNULL(tt."Number",
+	 0) as THIRD_DISC ,
+	 d."WhsCode" as WHS,
+	 d."NoInvtryMv" AS "NoInvtryMv" 
+	from "ORIN" h join "NNM1" n on h."Series" = n."Series" join "RIN1" d on h."DocEntry" = d."DocEntry" join "OCRD" c on h."CardCode" = c."CardCode" join "OITM" i on d."ItemCode" = i."ItemCode" 
+	left join "ZTKA_LILLY_LOTS" V on d."DocEntry" = V."DocEntry" 
+	and d."ObjType" = V."TransType" 
+	and d."LineNum" = V."DocLineNum" 
+	and d."WhsCode" = V."LocCode" 
+	and d."ItemCode" = V."ItemCode" 
+	left join "OOAT" tt on tt."AbsID" = d."AgrNo" --AND tt."Status"= N'A'
+ 
+	left join "OAT1" T1 ON tt."AbsID" = T1."AgrNo" 
+	AND T1."ItemCode"= d."ItemCode" 
+	left join (select
+	 d."DocEntry",
+	 d."ObjType",
+	 d."LineNum",
+	 V."Quantity",
+	 d."CodeBars",
+	 v."Lot" 
+		from "RDN1" d 
+		left join "ZTKA_LILLY_LOTS" V on d."DocEntry" = V."DocEntry" 
+		and d."ObjType" = V."TransType" 
+		and d."LineNum" = V."DocLineNum" 
+		and d."WhsCode" = V."LocCode" 
+		and d."ItemCode" = V."ItemCode" ) t on d."BaseType" = t."ObjType" 
+	and d."BaseEntry" = t."DocEntry" 
+	and d."BaseLine" = t."LineNum" 
+	where i."QryGroup6" = 'Y' 
+	and h."CANCELED" = 'N' 
+	and c."GroupCode" = '123' ) t1 
+GROUP BY "DOCDATE",
+	 "PARASTATIKO",
+	 "BARCODE",
+	 "LOT",
+	 "PRICE",
+	 "AFM",
+	 "DEFAULT_DISC",
+	 "SECOND_DISC",
+	 "THIRD_DISC",
+	 "WHS",
+	 "NoInvtryMv" WITH READ ONLY
+
+------------------------------------------------------------------------------------------------
+
+CREATE VIEW "PHAR_PROD"."ZTKA_LILLY_LOTS" ( "TransType",
+	 "DocEntry",
+	 "DocLineNum",
+	 "LocCode",
+	 "ItemCode",
+	 "Lot",
+	 "Quantity" ) AS SELECT
+	 H."DocType" as "TransType",
+	 H."ApplyEntry" as "DocEntry",
+	 H."ApplyLine" as "DocLineNum",
+	 H."LocCode" ,
+	 H."ItemCode" ,
+	 B."DistNumber" as "Lot",
+	 sum(L."Quantity") as "Quantity" 
+FROM OITL H JOIN ITL1 L ON H."LogEntry" = L."LogEntry" JOIN OBTN B ON B."SysNumber" = L."SysNumber" 
+AND B."AbsEntry" = L."MdAbsEntry" 
+GROUP BY H."DocType",
+	 H."ApplyEntry",
+	 H."ApplyLine",
+	 H."LocCode",
+	 H."ItemCode",
+	 B."DistNumber" WITH READ ONLY

@@ -1,0 +1,135 @@
+// Αναφορά Σύγκρισης Τιμών (Εντολών Αγοράς - Τιμολόγιου Προμηθείας)
+
+Select
+
+T0."DocEntry"
+,T0."DocNum" 
+,t0."DocDate" as "Ημερομηνία Καταχ. Τιμολογίου"
+,t2."CardCode"
+,t2."CardName"
+,T3."ItemCode"
+,Q0."Quantity" AS "Ποσότητα"
+,replace(cast (t1."Price" as nvarchar(10)), '.', ',') as "Τιμή Τιμολογίου"
+,ifnull(replace(cast (Q1."Price" as nvarchar(10)), '.', ',') , replace(cast (Q2."Price" as nvarchar(10)), '.', ',') ) as "Τιμή Παραγγελίας"
+,replace(cast (ifnull(T5."Price",t3."Price") as nvarchar(10)), '.', ',') as "Τιμή Τιμοκαταλόγου"
+--,T4."ListName" as "Τιμοκατάλογος"
+
+from
+
+OPCH t0
+inner join PCH1 t1 on t0."DocEntry" = t1."DocEntry"
+inner join OCRD t2 on t0."CardCode" = t2."CardCode"
+inner join OPLN t4 on t2."ListNum" = t4."ListNum"
+left join ITM1 t3 on t1."ItemCode" = t3."ItemCode" and t2."ListNum" = t3."PriceList"
+
+left join
+(
+select T0."DocEntry",t1."LineNum",t0."ObjType",T1."ItemCode",t1."BaseType",T1."BaseEntry",T1."BaseLine",t1."Price",t1."Quantity"
+from
+OPDN t0
+inner join PDN1 t1 on t0."DocEntry" = t1."DocEntry"
+) Q0 on t1."BaseEntry" = Q0."DocEntry" and T1."BaseLine" = Q0."LineNum" and T1."BaseType" = Q0."ObjType"
+left join
+(
+select T0."DocEntry",t1."LineNum",t0."ObjType",T1."ItemCode",t1."BaseType",T1."BaseEntry",T1."BaseLine",t1."Price",t1."Quantity"
+from
+OPOR t0
+inner join POR1 t1 on t0."DocEntry" = t1."DocEntry"
+) Q1 on t1."BaseEntry" = Q1."DocEntry" and T1."BaseLine" = Q1."LineNum" and T1."BaseType" = Q1."ObjType"
+left join
+(
+select T0."DocEntry",t1."LineNum",t0."ObjType",T1."ItemCode",t1."BaseType",T1."BaseEntry",T1."BaseLine",t1."Price",t1."Quantity"
+from
+OPOR t0
+inner join POR1 t1 on t0."DocEntry" = t1."DocEntry"
+) Q2 on Q0."BaseEntry" = Q2."DocEntry" and Q0."BaseLine" = Q2."LineNum" and Q0."BaseType" = Q2."ObjType"
+left join OSPP t5 on t0."CardCode" = t5."CardCode" and t5."ItemCode" = t1."ItemCode"
+
+where T0."DocType" = 'I'
+
+ORDER BY T0."DocEntry"
+,T0."DocNum"
+,T1."VisOrder"
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//Ανοιχτές Εντολές Αγοράς ανά Event & Είδος
+
+SELECT 
+
+T0."DocEntry" AS "Κλειδί Παραστατικού", 
+T0."DocNum" AS "Αριθμός Παραστατικού",
+T1."LineVendor" AS "Κωδικός Συναλ/μενου", 
+T4."CardName" AS "Όνομα Συναλλασσόμενου",
+T0."TaxDate" AS "Ημερ/νία Παραστατικού",
+T2."SeriesName" AS "Σειρά Παραστατικού",  
+T2."Remark" AS "Είδος Παραστατικού", 
+T1."ItemCode" AS "Κωδικός Είδους/Υπηρεσίας",
+T1."Dscription" AS "Περιγραφή Είδους/Υπηρεσίας",
+T1."LineNum" AS "Γραμμή Είδους/Υπηρεσίας",
+T1."OpenQty" AS "Ποσότητα",
+T1."U_TKA_Event"  AS "Event"
+--(SELECT "Descr" FROM UFD1 WHERE "TableID" = 'OPOR' and "FieldID" = '2' and "FldValue" = T0."U_TKA_QualityApproval") "Ποιοτική Έγκριση",
+--(SELECT "Descr" FROM UFD1 WHERE "TableID" = 'OPOR' and "FieldID" = '3' and "FldValue" = T0."U_TKA_QuantityApproval") "Ποσοτική Έγκριση"
+
+FROM OPRQ T0  
+
+INNER JOIN NNM1 T2 ON T0."Series" = T2."Series" 
+INNER JOIN OCRD T4 ON T0."CardCode" = T4."CardCode" 
+INNER JOIN PRQ1 T1 ON T0."DocEntry"= T1."DocEntry"
+
+
+WHERE T4."CardType" = 'S' AND 
+T0."CANCELED" = 'N' AND 
+T0."U_TKA_QualityApproval"= N'N' AND T0."U_TKA_QuantityApproval"= N'N' AND 
+
+T0."DocStatus"= 'O' AND 
+T1."LineStatus"= 'O' AND
+T2."SeriesName" = N'ΕΞΟΔΑ'
+
+ORDER BY 
+T1."U_TKA_Event",
+T1."ItemCode"
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+//Εντολές Αγοράς ανά Event & Είδος
+
+SELECT 
+
+T0."DocEntry" AS "Κλειδί Παραστατικού", 
+T0."DocNum" AS "Αριθμός Παραστατικού",
+T0."CardCode" AS "Κωδικός Συναλ/μενου", 
+T0."CardName" AS "Όνομα Συναλλασσόμενου",
+T0."TaxDate" AS "Ημερ/νία Παραστατικού",
+T2."SeriesName" AS "Σειρά Παραστατικού",  
+T2."Remark" AS "Είδος Παραστατικού", 
+T1."ItemCode" AS "Κωδικός Είδους/Υπηρεσίας",
+T1."Dscription" AS "Περιγραφή Είδους/Υπηρεσίας",
+T1."LineNum" AS "Γραμμή Είδους/Υπηρεσίας",
+T1."OpenQty" AS "Ποσότητα",
+T1."U_TKA_Event"  AS "Event",
+T1."Project", 
+T5."PrjName"
+--(SELECT "Descr" FROM UFD1 WHERE "TableID" = 'OPOR' and "FieldID" = '2' and "FldValue" = T0."U_TKA_QualityApproval") "Ποιοτική Έγκριση",
+--(SELECT "Descr" FROM UFD1 WHERE "TableID" = 'OPOR' and "FieldID" = '3' and "FldValue" = T0."U_TKA_QuantityApproval") "Ποσοτική Έγκριση"
+
+FROM OPOR T0  
+
+INNER JOIN NNM1 T2 ON T0."Series" = T2."Series" 
+INNER JOIN OCRD T4 ON T0."CardCode" = T4."CardCode" 
+INNER JOIN POR1 T1 ON T0."DocEntry"= T1."DocEntry"
+LEFT JOIN OPRJ T5 ON T1."Project" = T5."PrjCode"
+
+
+WHERE T4."CardType" = 'S' AND 
+T0."CANCELED" = 'N' AND 
+T0."U_TKA_QualityApproval"= N'N' AND T0."U_TKA_QuantityApproval"= N'N' AND 
+
+T0."DocStatus"= 'O' AND 
+T1."LineStatus"= 'O' AND
+T2."SeriesName" = N'ΕΞΟΔΑ'
+
+ORDER BY 
+T1."U_TKA_Event",
+T1."ItemCode"
