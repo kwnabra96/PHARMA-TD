@@ -1,0 +1,1261 @@
+CREATE VIEW "PHAR_PROD"."TKA_V_PURCHASE_ORDERS_CC_OPEN_AMOUNTS_OLD" ( "SRC",
+	 "CardCode",
+	 "CardName",
+	 "LicTradNum",
+	 "DocEntry",
+	 "DocNum",
+	 "DocDate",
+	 "DocDueDate",
+	 "TaxDate",
+	 "NumAtCard",
+	 "DocTotal",
+	 "OcrCode",
+	 "LineNum",
+	 "DelNoteEntry",
+	 "InvEntry",
+	 "Invoice",
+	 "Reverse" ) AS SELECT
+	 "V"."SRC" ,
+	 "V"."CardCode",
+	 "V"."CardName",
+	 "V"."LicTradNum",
+	 "V"."DocEntry" ,
+	 "V"."DocNum" ,
+	 "V"."DocDate" ,
+	 "V"."DocDueDate" ,
+	 "V"."TaxDate" ,
+	 "V"."NumAtCard" ,
+	 "V"."DocTotal" ,
+	 "V"."OcrCode" ,
+	 "V"."LineNum" ,
+	 "V"."DelNoteEntry" ,
+	 "V"."InvEntry" ,
+	 "V"."Invoice" ,
+	 "V"."Reverse" 
+FROM ( -- Author: Evangelos D. Plagianos
+-- Version:	1.0
+-- DateCreated:	04-08-2021
+-- LastModified:04-08-2021
+SELECT
+	 '1' AS "SRC",
+	 H."CardCode",
+	 H."CardName",
+	 H."LicTradNum",
+	 H."DocEntry" ,
+	 H."DocNum" ,
+	 H."DocDate" ,
+	 H."DocDueDate" ,
+	 H."TaxDate" ,
+	 H."NumAtCard" ,
+	 --."LineTotal" + H AS "DocTotal",
+ L."LineTotal" AS "DocTotal",
+	 L."OcrCode" ,
+	 L."LineNum" ,
+	 DN1."DocEntry" AS "DelNoteEntry" ,
+	 P1."DocEntry" AS "InvEntry",
+	 --P."DocTotal" AS "Invoice" ,
+ P1."LineTotal" AS "Invoice" ,
+	 0 AS "Reverse" 
+	FROM OPOR H 
+	INNER JOIN POR1 L ON H."DocEntry" = L."DocEntry" 
+	LEFT JOIN PDN1 DN1 ON DN1."BaseEntry" = L."DocEntry" 
+	AND DN1."BaseType" = L."ObjType" 
+	AND L."LineNum" = DN1."BaseLine" 
+	LEFT JOIN OPDN DN ON DN."DocEntry" = dn1."DocEntry" 
+	AND DN.CANCELED = N'N' 
+	LEFT JOIN PCH1 P1 ON P1."BaseEntry" = DN1."DocEntry" 
+	AND P1."BaseType" = DN1."ObjType" 
+	AND P1."BaseLine" = DN1."LineNum" 
+	INNER JOIN OPCH P ON P."DocEntry" = P1."DocEntry" --T.DRITSAS ME INNER JOIN ΦΕΡΝΕΙ ΜΙΑ ΦΟΡΑ ΤΟ ΤΙΜΟΛΟΓΙΟ '120000530'  
+ --LEFT JOIN OPCH P ON P."DocEntry" = P1."DocEntry" 
+ 
+	AND P.CANCELED = N'N' 
+	WHERE 1=1 
+	AND L."DocEntry" NOT IN (SELECT
+	 DISTINCT "RefDocEntr" 
+		FROM PCH21 
+		WHERE 1=1 
+		AND "RefObjType" = '22') 
+	UNION ALL SELECT
+	 '2' AS "SRC",
+	 H."CardCode",
+	 H."CardName",
+	 H."LicTradNum",
+	 H."DocEntry" ,
+	 H."DocNum" ,
+	 H."DocDate" ,
+	 H."DocDueDate" ,
+	 H."TaxDate" ,
+	 H."NumAtCard" ,
+	 --H."DocTotal" AS "DocTotal",
+ L."LineTotal" AS "DocTotal",
+	 L."OcrCode" ,
+	 L."LineNum" ,
+	 DN1."DocEntry" AS "DelNoteEntry" ,
+	 P1."DocEntry" AS "InvEntry",
+	 0 AS "Invoice" ,
+	 --((-1) * R."DocTotal") AS "Reverse"
+ ((-1) * R1."LineTotal") AS "Reverse" 
+	FROM OPOR H 
+	INNER JOIN POR1 L ON H."DocEntry" = L."DocEntry" 
+	LEFT JOIN PDN1 DN1 ON DN1."BaseEntry" = L."DocEntry" 
+	AND DN1."BaseType" = L."ObjType" 
+	AND L."LineNum" = DN1."BaseLine" 
+	LEFT JOIN OPDN DN ON DN."DocEntry" = dn1."DocEntry" 
+	AND DN.CANCELED = N'N' 
+	LEFT JOIN PCH1 P1 ON P1."BaseEntry" = DN1."DocEntry" 
+	AND P1."BaseType" = DN1."ObjType" 
+	AND P1."BaseLine" = DN1."LineNum" 
+	INNER JOIN OPCH P ON P."DocEntry" = P1."DocEntry" 
+	AND P.CANCELED = N'N' 
+	LEFT JOIN RPC1 R1 ON R1."BaseEntry" = P1."DocEntry" 
+	AND R1."BaseType" = P1."ObjType" 
+	AND R1."BaseLine" = P1."LineNum" 
+	INNER JOIN ORPC R ON R."DocEntry" = R1."DocEntry" 
+	AND R.CANCELED = N'N' 
+	WHERE 1=1 
+	AND L."DocEntry" NOT IN (SELECT
+	 DISTINCT "RefDocEntr" 
+		FROM PCH21 
+		WHERE 1=1 
+		AND "RefObjType" = '22') 
+	UNION ALL SELECT
+	 '3' AS "SRC",
+	 H."CardCode",
+	 H."CardName",
+	 H."LicTradNum",
+	 H."DocEntry" ,
+	 H."DocNum" ,
+	 H."DocDate" ,
+	 H."DocDueDate" ,
+	 H."TaxDate" ,
+	 H."NumAtCard" ,
+	 --H."DocTotal" AS "DocTotal",
+ L."LineTotal" AS "DocTotal",
+	 L."OcrCode" ,
+	 L."LineNum" ,
+	 '-1' AS "DelNoteEntry" ,
+	 P1."DocEntry" AS "InvEntry",
+	 --P."DocTotal" AS "Invoice" ,
+ P1."LineTotal" AS "Invoice" ,
+	 0 AS "Reverse" 
+	FROM OPOR H 
+	INNER JOIN POR1 L ON H."DocEntry" = L."DocEntry" 
+	LEFT JOIN PCH1 P1 ON P1."BaseEntry" = L."DocEntry" 
+	AND P1."BaseType" = L."ObjType" 
+	AND P1."BaseLine" = L."LineNum" 
+	INNER JOIN OPCH P ON P."DocEntry" = P1."DocEntry" 
+	AND P.CANCELED = N'N' 
+	WHERE 1=1 
+	AND L."DocEntry" NOT IN (SELECT
+	 DISTINCT "RefDocEntr" 
+		FROM PCH21 
+		WHERE 1=1 
+		AND "RefObjType" = '22') 
+	UNION ALL SELECT
+	 '4' AS "SRC",
+	 H."CardCode",
+	 H."CardName",
+	 H."LicTradNum",
+	 H."DocEntry" ,
+	 H."DocNum" ,
+	 H."DocDate" ,
+	 H."DocDueDate" ,
+	 H."TaxDate" ,
+	 H."NumAtCard" ,
+	 --H."DocTotal" AS "DocTotal",
+ L."LineTotal" AS "DocTotal",
+	 L."OcrCode" ,
+	 L."LineNum" ,
+	 '-1' AS "DelNoteEntry" ,
+	 '0' AS "InvEntry",
+	 --P."DocTotal" AS "Invoice" ,
+ sum(P1."LineTotal") AS "Invoice" ,
+	 0 AS "Reverse" 
+	FROM OPOR H 
+	INNER JOIN POR1 L ON H."DocEntry" = L."DocEntry" 
+	INNER JOIN (SELECT
+	 DISTINCT "DocEntry",
+	 "RefDocEntr",
+	 "LineNum" 
+		FROM PCH21 
+		WHERE 1=1 
+		AND "RefObjType" = '22') V ON V."RefDocEntr" = H."DocEntry" 
+	LEFT JOIN OPCH P ON P."DocEntry" = V."DocEntry" 
+	AND P.CANCELED = N'N' 
+	LEFT JOIN PCH1 P1 ON P1."DocEntry" = V."DocEntry" --AND P1."LineNum" = V."LineNum" 
+ 
+	WHERE 1=1 
+	GROUP BY H."CardCode",
+	 H."CardName",
+	 H."LicTradNum",
+	 H."DocEntry" ,
+	 H."DocNum" ,
+	 H."DocDate" ,
+	 H."DocDueDate" ,
+	 H."TaxDate" ,
+	 H."NumAtCard" ,
+	 --H."DocTotal" ,
+ L."LineTotal" ,
+	 L."OcrCode" ,
+	 L."LineNum" )V 
+WHERE 1=1 
+AND IFNULL(V."OcrCode",
+	 '') <> '' WITH READ ONLY
+	 
+	 ------------------------------------------------------------------------------------------------------
+	 
+	 CREATE VIEW "PHAR_PROD"."TKA_V_PURCHASE_ORDERS_CC_OPEN_AMOUNTS_V6" ( "SRC",
+	 "CardCode",
+	 "CardName",
+	 "LicTradNum",
+	 "DocEntry",
+	 "DocNum",
+	 "DocDate",
+	 "DocDueDate",
+	 "TaxDate",
+	 "NumAtCard",
+	 "DocTotal",
+	 "OcrCode",
+	 "LineNum",
+	 "DelNoteEntry",
+	 "InvEntry",
+	 "Invoice",
+	 "Reverse",
+	 "Number" ) AS SELECT
+	 "V"."SRC" ,
+	 "V"."CardCode",
+	 "V"."CardName",
+	 "V"."LicTradNum",
+	 "V"."DocEntry" ,
+	 "V"."DocNum" ,
+	 "V"."DocDate" ,
+	 "V"."DocDueDate" ,
+	 "V"."TaxDate" ,
+	 "V"."NumAtCard" ,
+	 "V"."DocTotal" ,
+	 "V"."OcrCode" ,
+	 "V"."LineNum" ,
+	 "V"."DelNoteEntry" ,
+	 "V"."InvEntry" ,
+	 "V"."Invoice" ,
+	 "V"."Reverse" ,
+	 "V"."Number" 
+FROM ( -- Author: Evangelos D. Plagianos
+-- Version:	3.0 Χωρίς ΦΠΑ & "SRC" '6' Referenced Documents With INV12 - H Polemitis
+-- DateCreated:	04-08-2021
+-- LastModified:04-08-2021
+--------------------------------------------------------23/05/2022-----------------------------------------------------------------
+-- Change: Galis Angelos
+-- Version:	6.0 Change in "SRC" '2'
+-- DateCreated:	17-05-2023
+-- LastModified:17-05-2023
+--------------------------------------------------------17/05/2023-----------------------------------------------------------------
+ SELECT
+	 '1' AS "SRC",
+	 H."CardCode",
+	 H."CardName",
+	 H."LicTradNum",
+	 H."DocEntry" ,
+	 H."DocNum" ,
+	 H."DocDate" ,
+	 H."DocDueDate" ,
+	 H."TaxDate" ,
+	 H."NumAtCard" ,
+	 SUM(L."LineTotal") AS "DocTotal",
+	 --L."LineTotal" AS "DocTotal",
+ L."OcrCode" ,
+	 0 AS "LineNum",
+	 --L."LineNum" ,
+ 0 AS "DelNoteEntry" ,
+	--IFNULL(DN1."DocEntry", -1) AS "DelNoteEntry" ,
+ 0 AS "InvEntry",
+	 --IFNULL(P1."DocEntry", 0) AS "InvEntry",
+ SUM(IFNULL(P1."LineTotal",
+	 0)) AS "Invoice" ,
+	--IFNULL(P1."LineTotal", 0) AS "Invoice" ,	 
+ ROUND(((-1) * SUM((IFNULL(RP1."LineTotal",
+	0)))),
+	2) AS "Reverse",
+	 --ROUND(((-1) * (IFNULL(RP1."LineTotal",0))),2) AS "Reverse", 
+ IFNULL(RD."Number",
+	0) AS "Number" 
+	FROM OPOR H 
+	INNER JOIN POR1 L ON H."DocEntry" = L."DocEntry" 
+	LEFT JOIN PDN1 DN1 ON DN1."BaseEntry" = L."DocEntry" 
+	AND DN1."BaseType" = L."ObjType" 
+	AND L."LineNum" = DN1."BaseLine" 
+	LEFT JOIN OPDN DN ON DN."DocEntry" = DN1."DocEntry" 
+	LEFT JOIN RPD1 RDN1 ON RDN1."BaseEntry" = DN1."DocEntry" 
+	AND RDN1."BaseType" = DN1."ObjType" 
+	AND DN1."LineNum" = RDN1."BaseLine" 
+	LEFT JOIN ORPD RDN ON RDN."DocEntry" = RDN1."DocEntry" 
+	LEFT JOIN PCH1 P1 ON P1."BaseEntry" = DN1."DocEntry" 
+	AND P1."BaseType" = DN1."ObjType" 
+	AND P1."BaseLine" = DN1."LineNum" 
+	LEFT JOIN OPCH P ON P."DocEntry" = P1."DocEntry" 
+	LEFT JOIN RPC1 RP1 ON RP1."BaseEntry" = P1."DocEntry" 
+	AND RP1."BaseType" = P1."ObjType" 
+	AND RP1."BaseLine" = P1."LineNum" 
+	LEFT JOIN ORPC RP ON RP."DocEntry" = RP1."DocEntry" 
+	LEFT JOIN "OOAT" RD ON L."U_TKA_AgrNo"= RD."AbsID" 
+	WHERE 1=1 --AND H."DocNum" IN ('120004268', '120003531')
+ 
+	AND IFNULL(P.CANCELED,
+	 N'N') = N'N' 
+	AND IFNULL(DN.CANCELED,
+	 N'N') = N'N' 
+	AND IFNULL(RP.CANCELED,
+	 N'N') = N'N' 
+	AND IFNULL(RDN.CANCELED,
+	 N'N') = N'N' 
+	GROUP BY H."CardCode",
+	 H."CardName",
+	 H."LicTradNum",
+	 H."DocEntry",
+	 H."DocNum",
+	 H."DocDate",
+	 H."DocDueDate",
+	 H."TaxDate",
+	 H."NumAtCard",
+	 L."OcrCode",
+	 IFNULL(RD."Number",
+	0) 
+	UNION ALL SELECT
+	 '2' AS "SRC",
+	 T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T0."DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 SUM(IFNULL(T1."LineTotal",
+	 0)) AS "DocTotal",
+	 T1."OcrCode" ,
+	 0 AS "LineNum",
+	 0 AS "DelNoteEntry" ,
+	 0 AS "InvEntry",
+	 IFNULL(S."LineTotal",
+	 0) AS "Invoice" ,
+	 0 AS "Reverse" ,
+	 IFNULL(T2."Number",
+	 0) AS "Number" 
+	FROM OPOR T0 
+	INNER JOIN POR1 T1 ON T0."DocEntry" = T1."DocEntry" 
+	LEFT JOIN "OOAT" T2 ON T1."U_TKA_AgrNo"= T2."AbsID" 
+	INNER JOIN ( SELECT
+	 S4."RefDocEntr",
+	 SUM(IFNULL(S2."LineTotal",
+	 0)) AS "LineTotal",
+	 S2."OcrCode" 
+		FROM OPDN S0 
+		INNER JOIN PDN1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		INNER JOIN PCH1 S2 ON S2."BaseEntry" = S1."DocEntry" 
+		AND S2."BaseType" = S1."ObjType" 
+		AND S2."BaseLine" = S1."LineNum" 
+		INNER JOIN OPCH S3 ON S3."DocEntry" = S2."DocEntry" 
+		INNER JOIN PCH21 S4 ON S3."DocEntry" = S4."DocEntry" 
+		AND S4."RefObjType" = '22' 
+		WHERE IFNULL(S3.CANCELED,
+	 'N') = 'N' 
+		AND IFNULL(S0.CANCELED,
+	 'N') = 'N' 
+		GROUP BY S4."RefDocEntr",
+	 S2."OcrCode" ) S ON S."RefDocEntr" = T0."DocEntry" 
+	AND T1."OcrCode" = S."OcrCode" 
+	WHERE 1 = 1 --AND T0."DocNum" = '120007185'
+ 
+	GROUP BY T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T0."DocEntry",
+	 T0."DocNum",
+	 T0."DocDate",
+	 T0."DocDueDate",
+	 T0."TaxDate",
+	 T0."NumAtCard",
+	 T1."OcrCode",
+	 IFNULL(T2."Number",
+	 0),
+	 IFNULL(S."LineTotal",
+	 0) 
+	UNION ALL SELECT
+	 '3' AS "SRC",
+	 O."CardCode",
+	 O."CardName",
+	 O."LicTradNum",
+	 O."DocEntry" ,
+	 O."DocNum" ,
+	 O."DocDate" ,
+	 O."DocDueDate" ,
+	 O."TaxDate" ,
+	 O."NumAtCard" ,
+	 O1."LineTotal" AS "DocTotal",
+	 O1."OcrCode" ,
+	 O1."LineNum" ,
+	 -1 AS "DelNoteEntry" ,
+	 IFNULL(P1."DocEntry",
+	 0) AS "InvEntry",
+	 IFNULL(P1."LineTotal",
+	 0) AS "Invoice" ,
+	 0 AS "Reverse",
+	 IFNULL(RD."Number",
+	 0) AS "Number" 
+	FROM PCH1 P1 
+	LEFT JOIN OPCH P ON P."DocEntry" = P1."DocEntry" 
+	INNER JOIN (SELECT
+	 DISTINCT "DocEntry",
+	 IFNULL("RefDocEntr",
+	 -1) AS "RefDocEntr",
+	 "LineNum" 
+		FROM PCH21 
+		WHERE 1=1 
+		AND "RefObjType" = '22') V ON V."DocEntry" = P."DocEntry" 
+	LEFT JOIN OPOR O ON O."DocEntry" = V."RefDocEntr" 
+	LEFT JOIN POR1 O1 ON O1."DocEntry" = O."DocEntry" 
+	LEFT JOIN "OOAT" RD ON P1."U_TKA_AgrNo"= RD."AbsID" 
+	WHERE 1=1 --AND O."DocNum" IN('120004268', '120003531')
+ 
+	AND P1."BaseType" = '-1' 
+	AND IFNULL(P.CANCELED,
+	 N'N') = N'N' 
+	UNION ALL SELECT
+	 '4' AS "SRC",
+	 O."CardCode",
+	 O."CardName",
+	 O."LicTradNum",
+	 O."DocEntry" ,
+	 O."DocNum" ,
+	 O."DocDate" ,
+	 O."DocDueDate" ,
+	 O."TaxDate" ,
+	 O."NumAtCard" ,
+	 O1."LineTotal" AS "DocTotal",
+	 O1."OcrCode" ,
+	 O1."LineNum" ,
+	 -1 AS "DelNoteEntry" ,
+	 IFNULL(P1."DocEntry",
+	 0) AS "InvEntry",
+	 0 AS "Invoice" ,
+	 -IFNULL(P1."LineTotal",
+	 0) AS "Reverse",
+	 IFNULL(RD."Number",
+	 0) AS "Number" 
+	FROM RPC1 P1 
+	LEFT JOIN ORPC P ON P."DocEntry" = P1."DocEntry" 
+	INNER JOIN (SELECT
+	 DISTINCT "DocEntry",
+	 IFNULL("RefDocEntr",
+	 -1) AS "RefDocEntr",
+	 "LineNum" 
+		FROM RPC21 
+		WHERE 1=1 
+		AND "RefObjType" = '22') V ON V."DocEntry" = P."DocEntry" 
+	LEFT JOIN OPOR O ON O."DocEntry" = V."RefDocEntr" 
+	LEFT JOIN POR1 O1 ON O1."DocEntry" = O."DocEntry" 
+	LEFT JOIN "OOAT" RD ON P1."U_TKA_AgrNo"= RD."AbsID" 
+	WHERE 1=1 --AND O."DocNum" IN('120004268', '120003531')
+ 
+	AND P1."BaseType" = '-1' 
+	AND IFNULL(P.CANCELED,
+	 N'N') = N'N' )V 
+WHERE 1=1 WITH READ ONLY
+
+---------------------------------------------------------------------------
+
+CREATE VIEW "PHAR_PROD"."TKA_V_PURCHASE_ORDERS_CC_OPEN_AMOUNTS_V9" ( "CardCode",
+	 "CardName",
+	 "LicTradNum",
+	 "DocEntry",
+	 "DocNum",
+	 "DocDate",
+	 "DocDueDate",
+	 "TaxDate",
+	 "NumAtCard",
+	 "DocTotal",
+	 "OcrCode",
+	 "Invoice",
+	 "Reverse",
+	 "Number" ) AS SELECT
+	 "V"."CardCode",
+	 "V"."CardName",
+	 "V"."LicTradNum",
+	 "V"."DocEntry" ,
+	 "V"."DocNum" ,
+	 "V"."DocDate" ,
+	 "V"."DocDueDate" ,
+	 "V"."TaxDate" ,
+	 "V"."NumAtCard" ,
+	 SUM(IFNULL("V"."DocTotal",
+	0)) AS "DocTotal",
+	 "V"."OcrCode" ,
+	 SUM(IFNULL("V"."Invoice",
+	0)) AS "Invoice",
+	 SUM(IFNULL("V"."Reverse",
+	0)) AS "Reverse",
+	 "V"."Number" 
+FROM ( --Purchase Order
+ SELECT
+	 T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T0."DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 SUM(IFNULL(T1."LineTotal",
+	0)) AS "DocTotal",
+	 IFNULL(T1."OcrCode",
+	'') AS "OcrCode" ,
+	 0 AS "Invoice" ,
+	 0 AS "Reverse" ,
+	 IFNULL(T2."Number",
+	0) AS "Number" 
+	FROM OPOR T0 
+	INNER JOIN POR1 T1 ON T0."DocEntry" = T1."DocEntry" 
+	LEFT JOIN "OOAT" T2 ON T1."U_TKA_AgrNo"= T2."AbsID" 
+	WHERE IFNULL(T0.CANCELED,
+	 N'N') = N'N' 
+	GROUP BY T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T0."DocEntry",
+	 T0."DocNum",
+	 T0."DocDate",
+	 T0."DocDueDate",
+	 T0."TaxDate",
+	 T0."NumAtCard",
+	 IFNULL(T1."OcrCode",
+	''),
+	 IFNULL(T2."Number",
+	 0) --Case Bonding with regular sap flow 
+ 
+	UNION ALL SELECT
+	 T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T0."DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 0 AS "DocTotal",
+	 -- T1."OcrCode" ,
+ IFNULL(T5."OcrCode",
+	'') AS "OcrCode" ,
+	 SUM(IFNULL(T5."LineTotal",
+	 0)) AS "LineTotal" ,
+	 ROUND(((-1) * SUM(IFNULL(T6."LineTotal",
+	 0))),
+	 2) AS "Reverse",
+	 IFNULL(T2."Number",
+	0) AS "Number" 
+	FROM OPOR T0 
+	INNER JOIN POR1 T1 ON T0."DocEntry" = T1."DocEntry" 
+	LEFT JOIN "OOAT" T2 ON T1."U_TKA_AgrNo"= T2."AbsID" 
+	INNER JOIN ( SELECT
+	 S0."DocEntry",
+	 S1."BaseEntry",
+	 S1."BaseType",
+	 S1."BaseLine",
+	 S1."ObjType",
+	 S1."LineNum" 
+		FROM OPDN S0 
+		INNER JOIN PDN1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		WHERE IFNULL(S0.CANCELED,
+	 N'N') = N'N') T3 ON T3."BaseEntry" = T1."DocEntry" 
+	AND T3."BaseType" = T1."ObjType" 
+	AND T1."LineNum" = T3."BaseLine" 
+	LEFT JOIN ( SELECT
+	 S0."DocEntry",
+	 S1."BaseEntry",
+	 S1."BaseType",
+	 S1."BaseLine",
+	 S1."ObjType",
+	 S1."LineNum" 
+		FROM ORPD S0 
+		INNER JOIN RPD1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		WHERE IFNULL(S0.CANCELED,
+	 N'N') = N'N') T4 ON T4."BaseEntry" = T3."DocEntry" 
+	AND T4."BaseType" = T3."ObjType" 
+	AND T3."LineNum" = T4."BaseLine" 
+	INNER JOIN ( SELECT
+	 S0."DocEntry",
+	 S1."BaseEntry",
+	 S1."BaseType",
+	 S1."BaseLine",
+	 S1."ObjType",
+	 S1."LineNum",
+	 S1."LineTotal",
+	 S1."OcrCode" 
+		FROM OPCH S0 
+		INNER JOIN PCH1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		LEFT JOIN PCH21 S2 ON S2."DocEntry" = S0."DocEntry" 
+		AND S2."RefObjType" = '22' 
+		WHERE IFNULL(S0.CANCELED,
+	 N'N') = N'N' 
+		AND IFNULL(S2."RefDocEntr",
+	 0) = 0 --Get only them that dose not Bonding with PCH21
+ ) T5 ON T5."BaseEntry" = T3."DocEntry" 
+	AND T5."BaseType" = T3."ObjType" 
+	AND T3."LineNum" = T5."BaseLine" 
+	LEFT JOIN ( SELECT
+	 S0."DocEntry",
+	 S1."BaseEntry",
+	 S1."BaseType",
+	 S1."BaseLine",
+	 S1."ObjType",
+	 S1."LineNum",
+	 S1."LineTotal" 
+		FROM ORPC S0 
+		INNER JOIN RPC1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		LEFT JOIN RPC21 S2 ON S2."DocEntry" = S0."DocEntry" 
+		AND S2."RefObjType" = '22' 
+		WHERE IFNULL(S0.CANCELED,
+	 N'N') = N'N' 
+		AND IFNULL(S2."RefDocEntr",
+	 0) = 0 --Get only them that dose not Bonding with RPC21
+ ) T6 ON T6."BaseEntry" = T5."DocEntry" 
+	AND T6."BaseType" = T5."ObjType" 
+	AND T5."LineNum" = T6."BaseLine" 
+	WHERE IFNULL(T0.CANCELED,
+	 N'N') = N'N' 
+	GROUP BY T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T0."DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 --T1."OcrCode" ,
+ IFNULL(T5."OcrCode",
+	'') ,
+	 IFNULL(T2."Number",
+	0) --Case Bonding with PCH21 (Invoice) 
+ 
+	UNION ALL SELECT
+	 T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T5."RefDocEntr" AS "DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 0 AS "DocTotal",
+	 IFNULL(T4."OcrCode",
+	'') AS "OcrCode" ,
+	 SUM(IFNULL(T4."LineTotal",
+	 0)) AS "LineTotal",
+	 ROUND(((-1) * SUM(IFNULL(T6."LineTotal",
+	 0))),
+	 2) AS "Reverse",
+	 IFNULL(T1."Number",
+	0) AS "Number" 
+	FROM OPCH T3 
+	INNER JOIN PCH1 T4 ON T4."DocEntry" = T3."DocEntry" 
+	INNER JOIN PCH21 T5 ON T3."DocEntry" = T5."DocEntry" 
+	AND T5."RefObjType" = '22' 
+	LEFT JOIN ( SELECT
+	 S0."DocEntry",
+	 S1."BaseEntry",
+	 S1."BaseType",
+	 S1."BaseLine",
+	 S1."ObjType",
+	 S1."LineNum",
+	 S1."LineTotal" 
+		FROM ORPC S0 
+		INNER JOIN RPC1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		LEFT JOIN RPC21 S2 ON S2."DocEntry" = S0."DocEntry" 
+		AND S2."RefObjType" = '22' 
+		WHERE IFNULL(S0.CANCELED,
+	 N'N') = N'N' 
+		AND IFNULL(S2."RefDocEntr",
+	 0) = 0 --Get only them that dose not Bonding with RPC21
+ ) T6 ON T6."BaseEntry" = T4."DocEntry" 
+	AND T6."BaseType" = T4."ObjType" 
+	AND T4."LineNum" = T6."BaseLine" 
+	INNER JOIN OPOR T0 ON T0."DocEntry" = T5."RefDocEntr" 
+	LEFT JOIN ( SELECT
+	 S1."DocEntry",
+	 S1."OcrCode",
+	 S2."Number" 
+		FROM POR1 S1 
+		LEFT JOIN "OOAT" S2 ON S2."AbsID" = S1."U_TKA_AgrNo" 
+		GROUP BY S1."DocEntry",
+	 S1."OcrCode",
+	 S2."Number") T1 ON T1."DocEntry" = T0."DocEntry" 
+	AND T1."OcrCode" = T4."OcrCode" 
+	WHERE IFNULL(T3.CANCELED,
+	 'N') = 'N' 
+	AND IFNULL(T0.CANCELED,
+	 'N') = 'N' 
+	GROUP BY T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T5."RefDocEntr" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 IFNULL(T4."OcrCode",
+	'') ,
+	 IFNULL(T1."Number",
+	0) --Case Bonding with RPC21 (Credit) 
+ 
+	UNION ALL SELECT
+	 T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T5."RefDocEntr" AS "DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 0 AS "DocTotal",
+	 IFNULL(T4."OcrCode",
+	'') AS "OcrCode" ,
+	 0 AS "LineTotal",
+	 ROUND(((-1) * SUM(IFNULL(T4."LineTotal",
+	 0))),
+	 2) AS "Reverse",
+	 IFNULL(T1."Number",
+	0) AS "Number" 
+	FROM ORPC T3 
+	INNER JOIN RPC1 T4 ON T4."DocEntry" = T3."DocEntry" 
+	INNER JOIN RPC21 T5 ON T3."DocEntry" = T5."DocEntry" 
+	AND T5."RefObjType" = '22' 
+	INNER JOIN OPOR T0 ON T0."DocEntry" = T5."RefDocEntr" 
+	LEFT JOIN ( SELECT
+	 S1."DocEntry",
+	 S1."OcrCode",
+	 S2."Number" 
+		FROM POR1 S1 
+		LEFT JOIN "OOAT" S2 ON S2."AbsID" = S1."U_TKA_AgrNo" 
+		GROUP BY S1."DocEntry",
+	 S1."OcrCode",
+	 S2."Number") T1 ON T1."DocEntry" = T0."DocEntry" 
+	AND T1."OcrCode" = T4."OcrCode" 
+	WHERE IFNULL(T3.CANCELED,
+	 'N') = 'N' 
+	AND IFNULL(T0.CANCELED,
+	 'N') = 'N' 
+	GROUP BY T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T5."RefDocEntr" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 IFNULL(T4."OcrCode",
+	'') ,
+	 IFNULL(T1."Number",
+	0) )V 
+WHERE 1=1 --AND V."DocNum" = '120009424'--'120008301'
+
+GROUP BY "V"."CardCode",
+	 "V"."CardName",
+	 "V"."LicTradNum",
+	 "V"."DocEntry" ,
+	 "V"."DocNum" ,
+	 "V"."DocDate" ,
+	 "V"."DocDueDate" ,
+	 "V"."TaxDate" ,
+	 "V"."NumAtCard" ,
+	 "V"."OcrCode" ,
+	 "V"."Number" WITH READ ONLY
+	 
+	 -------------------------------------------------------------------------
+	 
+	 CREATE VIEW "PHAR_PROD"."TKA_V_PURCHASE_ORDERS_CC_OPEN_AMOUNTS_ANALYTIC" ( "CardCode",
+	 "CardName",
+	 "LicTradNum",
+	 "DocEntry",
+	 "DocNum",
+	 "DocDate",
+	 "DocDueDate",
+	 "TaxDate",
+	 "NumAtCard",
+	 "DocTotal",
+	 "OcrCode",
+	 "Invoice",
+	 "Reverse",
+	 "Number",
+	 "U_TKA_CatDapanis",
+	 "U_TKA_Event",
+	 "Project",
+	 "U_TKA_TyposSunedriou",
+	 "U_TKA_DAPANES",
+	 "ItemCode",
+	 "Dscription",
+	 "U_TKA_Dimosiopoisi" ) AS SELECT
+	 "V"."CardCode",
+	 "V"."CardName",
+	 "V"."LicTradNum",
+	 "V"."DocEntry" ,
+	 "V"."DocNum" ,
+	 "V"."DocDate" ,
+	 "V"."DocDueDate" ,
+	 "V"."TaxDate" ,
+	 "V"."NumAtCard" ,
+	 SUM(IFNULL("V"."DocTotal",
+	0)) AS "DocTotal",
+	 "V"."OcrCode" ,
+	 SUM(IFNULL("V"."Invoice",
+	0)) AS "Invoice",
+	 SUM(IFNULL("V"."Reverse",
+	0)) AS "Reverse",
+	 "V"."Number" ,
+	 IFNULL("V"."U_TKA_CatDapanis",
+	 '') AS "U_TKA_CatDapanis",
+	 IFNULL("V"."U_TKA_Event",
+	 '') AS "U_TKA_Event",
+	 IFNULL("V"."Project",
+	 '') AS "Project",
+	 IFNULL("V"."U_TKA_TyposSunedriou",
+	 '') AS "U_TKA_TyposSunedriou",
+	 IFNULL("V"."U_TKA_DAPANES",
+	 '') AS "U_TKA_DAPANES",
+	 IFNULL("V"."ItemCode",
+	 '') AS "ItemCode",
+	 IFNULL("V"."Dscription",
+	 '') AS "Dscription",
+	 IFNULL("V"."U_TKA_Dimosiopoisi",
+	 '') AS "U_TKA_Dimosiopoisi" 
+FROM ( --Purchase Order
+ SELECT
+	 T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T0."DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 SUM(IFNULL(T1."LineTotal",
+	0)) AS "DocTotal",
+	 IFNULL(T1."OcrCode",
+	'') AS "OcrCode" ,
+	 0 AS "Invoice" ,
+	 0 AS "Reverse" ,
+	 IFNULL(T2."Number",
+	0) AS "Number",
+	 IFNULL(T1."U_TKA_CatDapanis",
+	 '') AS "U_TKA_CatDapanis",
+	 IFNULL(T1."U_TKA_Event",
+	 '') AS "U_TKA_Event",
+	 IFNULL(T1."Project",
+	 '') AS "Project",
+	 IFNULL(T1."U_TKA_TyposSunedriou",
+	 '') AS "U_TKA_TyposSunedriou",
+	 IFNULL(T1."U_TKA_DAPANES",
+	 '') AS "U_TKA_DAPANES",
+	 IFNULL(T1."ItemCode",
+	 '') AS "ItemCode",
+	 IFNULL(T1."Dscription",
+	 '') AS "Dscription",
+	 IFNULL(T1."U_TKA_Dimosiopoisi",
+	 '') AS "U_TKA_Dimosiopoisi" 
+	FROM OPOR T0 
+	INNER JOIN POR1 T1 ON T0."DocEntry" = T1."DocEntry" 
+	LEFT JOIN "OOAT" T2 ON T1."U_TKA_AgrNo"= T2."AbsID" 
+	WHERE IFNULL(T0.CANCELED,
+	 N'N') = N'N' 
+	GROUP BY T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T0."DocEntry",
+	 T0."DocNum",
+	 T0."DocDate",
+	 T0."DocDueDate",
+	 T0."TaxDate",
+	 T0."NumAtCard",
+	 IFNULL(T1."OcrCode",
+	''),
+	 IFNULL(T2."Number",
+	 0),
+	 IFNULL(T1."U_TKA_CatDapanis",
+	 ''),
+	 IFNULL(T1."U_TKA_Event",
+	 ''),
+	 IFNULL(T1."Project",
+	 ''),
+	 IFNULL(T1."U_TKA_TyposSunedriou",
+	 ''),
+	 IFNULL(T1."U_TKA_DAPANES",
+	 ''),
+	 IFNULL(T1."ItemCode",
+	 ''),
+	 IFNULL(T1."Dscription",
+	 ''),
+	 IFNULL(T1."U_TKA_Dimosiopoisi",
+	 '') --Case Bonding with regular sap flow 
+ 
+	UNION ALL SELECT
+	 T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T0."DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 0 AS "DocTotal",
+	 -- T1."OcrCode" ,
+ IFNULL(T5."OcrCode",
+	'') AS "OcrCode" ,
+	 SUM(IFNULL(T5."LineTotal",
+	 0)) AS "LineTotal" ,
+	 ROUND(((-1) * SUM(IFNULL(T6."LineTotal",
+	 0))),
+	 2) AS "Reverse",
+	 IFNULL(T2."Number",
+	0) AS "Number" ,
+	 IFNULL(T1."U_TKA_CatDapanis",
+	 '') AS "U_TKA_CatDapanis",
+	 IFNULL(T1."U_TKA_Event",
+	 '') AS "U_TKA_Event",
+	 IFNULL(T1."Project",
+	 '') AS "Project",
+	 IFNULL(T1."U_TKA_TyposSunedriou",
+	 '') AS "U_TKA_TyposSunedriou",
+	 IFNULL(T1."U_TKA_DAPANES",
+	 '') AS "U_TKA_DAPANES",
+	 IFNULL(T1."ItemCode",
+	 '') AS "ItemCode",
+	 IFNULL(T1."Dscription",
+	 '') AS "Dscription",
+	 IFNULL(T1."U_TKA_Dimosiopoisi",
+	 '') AS "U_TKA_Dimosiopoisi" 
+	FROM OPOR T0 
+	INNER JOIN POR1 T1 ON T0."DocEntry" = T1."DocEntry" 
+	LEFT JOIN "OOAT" T2 ON T1."U_TKA_AgrNo"= T2."AbsID" 
+	INNER JOIN ( SELECT
+	 S0."DocEntry",
+	 S1."BaseEntry",
+	 S1."BaseType",
+	 S1."BaseLine",
+	 S1."ObjType",
+	 S1."LineNum" 
+		FROM OPDN S0 
+		INNER JOIN PDN1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		WHERE IFNULL(S0.CANCELED,
+	 N'N') = N'N') T3 ON T3."BaseEntry" = T1."DocEntry" 
+	AND T3."BaseType" = T1."ObjType" 
+	AND T1."LineNum" = T3."BaseLine" 
+	LEFT JOIN ( SELECT
+	 S0."DocEntry",
+	 S1."BaseEntry",
+	 S1."BaseType",
+	 S1."BaseLine",
+	 S1."ObjType",
+	 S1."LineNum" 
+		FROM ORPD S0 
+		INNER JOIN RPD1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		WHERE IFNULL(S0.CANCELED,
+	 N'N') = N'N') T4 ON T4."BaseEntry" = T3."DocEntry" 
+	AND T4."BaseType" = T3."ObjType" 
+	AND T3."LineNum" = T4."BaseLine" 
+	INNER JOIN ( SELECT
+	 S0."DocEntry",
+	 S1."BaseEntry",
+	 S1."BaseType",
+	 S1."BaseLine",
+	 S1."ObjType",
+	 S1."LineNum",
+	 S1."LineTotal",
+	 S1."OcrCode" 
+		FROM OPCH S0 
+		INNER JOIN PCH1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		LEFT JOIN PCH21 S2 ON S2."DocEntry" = S0."DocEntry" 
+		AND S2."RefObjType" = '22' 
+		WHERE IFNULL(S0.CANCELED,
+	 N'N') = N'N' 
+		AND IFNULL(S2."RefDocEntr",
+	 0) = 0 --Get only them that dose not Bonding with PCH21
+ ) T5 ON T5."BaseEntry" = T3."DocEntry" 
+	AND T5."BaseType" = T3."ObjType" 
+	AND T3."LineNum" = T5."BaseLine" 
+	LEFT JOIN ( SELECT
+	 S0."DocEntry",
+	 S1."BaseEntry",
+	 S1."BaseType",
+	 S1."BaseLine",
+	 S1."ObjType",
+	 S1."LineNum",
+	 S1."LineTotal" 
+		FROM ORPC S0 
+		INNER JOIN RPC1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		LEFT JOIN RPC21 S2 ON S2."DocEntry" = S0."DocEntry" 
+		AND S2."RefObjType" = '22' 
+		WHERE IFNULL(S0.CANCELED,
+	 N'N') = N'N' 
+		AND IFNULL(S2."RefDocEntr",
+	 0) = 0 --Get only them that dose not Bonding with RPC21
+ ) T6 ON T6."BaseEntry" = T5."DocEntry" 
+	AND T6."BaseType" = T5."ObjType" 
+	AND T5."LineNum" = T6."BaseLine" 
+	WHERE IFNULL(T0.CANCELED,
+	 N'N') = N'N' 
+	GROUP BY T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T0."DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 --T1."OcrCode" ,
+ IFNULL(T5."OcrCode",
+	'') ,
+	 IFNULL(T2."Number",
+	0),
+	 IFNULL(T1."U_TKA_CatDapanis",
+	 ''),
+	 IFNULL(T1."U_TKA_Event",
+	 ''),
+	 IFNULL(T1."Project",
+	 ''),
+	 IFNULL(T1."U_TKA_TyposSunedriou",
+	 ''),
+	 IFNULL(T1."U_TKA_DAPANES",
+	 ''),
+	 IFNULL(T1."ItemCode",
+	 ''),
+	 IFNULL(T1."Dscription",
+	 ''),
+	 IFNULL(T1."U_TKA_Dimosiopoisi",
+	 '') --Case Bonding with PCH21 (Invoice) 
+ 
+	UNION ALL SELECT
+	 T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T5."RefDocEntr" AS "DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 0 AS "DocTotal",
+	 IFNULL(T4."OcrCode",
+	'') AS "OcrCode" ,
+	 SUM(IFNULL(T4."LineTotal",
+	 0)) AS "LineTotal",
+	 ROUND(((-1) * SUM(IFNULL(T6."LineTotal",
+	 0))),
+	 2) AS "Reverse",
+	 IFNULL(T1."Number",
+	0) AS "Number" ,
+	 IFNULL(T4."U_TKA_CatDapanis",
+	 '') AS "U_TKA_CatDapanis",
+	 IFNULL(T4."U_TKA_Event",
+	 '') AS "U_TKA_Event",
+	 IFNULL(T4."Project",
+	 '') AS "Project",
+	 IFNULL(T4."U_TKA_TyposSunedriou",
+	 '') AS "U_TKA_TyposSunedriou",
+	 IFNULL(T4."U_TKA_DAPANES",
+	 '') AS "U_TKA_DAPANES",
+	 IFNULL(T4."ItemCode",
+	 '') AS "ItemCode",
+	 IFNULL(T4."Dscription",
+	 '') AS "Dscription",
+	 IFNULL(T4."U_TKA_Dimosiopoisi",
+	 '') AS "U_TKA_Dimosiopoisi" 
+	FROM OPCH T3 
+	INNER JOIN PCH1 T4 ON T4."DocEntry" = T3."DocEntry" 
+	INNER JOIN PCH21 T5 ON T3."DocEntry" = T5."DocEntry" 
+	AND T5."RefObjType" = '22' 
+	LEFT JOIN ( SELECT
+	 S0."DocEntry",
+	 S1."BaseEntry",
+	 S1."BaseType",
+	 S1."BaseLine",
+	 S1."ObjType",
+	 S1."LineNum",
+	 S1."LineTotal" 
+		FROM ORPC S0 
+		INNER JOIN RPC1 S1 ON S0."DocEntry" = S1."DocEntry" 
+		LEFT JOIN RPC21 S2 ON S2."DocEntry" = S0."DocEntry" 
+		AND S2."RefObjType" = '22' 
+		WHERE IFNULL(S0.CANCELED,
+	 N'N') = N'N' 
+		AND IFNULL(S2."RefDocEntr",
+	 0) = 0 --Get only them that dose not Bonding with RPC21
+ ) T6 ON T6."BaseEntry" = T4."DocEntry" 
+	AND T6."BaseType" = T4."ObjType" 
+	AND T4."LineNum" = T6."BaseLine" 
+	INNER JOIN OPOR T0 ON T0."DocEntry" = T5."RefDocEntr" 
+	LEFT JOIN ( SELECT
+	 S1."DocEntry",
+	 S1."OcrCode",
+	 S2."Number" 
+		FROM POR1 S1 
+		LEFT JOIN "OOAT" S2 ON S2."AbsID" = S1."U_TKA_AgrNo" 
+		GROUP BY S1."DocEntry",
+	 S1."OcrCode",
+	 S2."Number") T1 ON T1."DocEntry" = T0."DocEntry" 
+	AND T1."OcrCode" = T4."OcrCode" 
+	WHERE IFNULL(T3.CANCELED,
+	 'N') = 'N' 
+	AND IFNULL(T0.CANCELED,
+	 'N') = 'N' 
+	GROUP BY T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T5."RefDocEntr" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 IFNULL(T4."OcrCode",
+	'') ,
+	 IFNULL(T1."Number",
+	0),
+	 IFNULL(T4."U_TKA_CatDapanis",
+	 ''),
+	 IFNULL(T4."U_TKA_Event",
+	 ''),
+	 IFNULL(T4."Project",
+	 ''),
+	 IFNULL(T4."U_TKA_TyposSunedriou",
+	 ''),
+	 IFNULL(T4."U_TKA_DAPANES",
+	 ''),
+	 IFNULL(T4."ItemCode",
+	 ''),
+	 IFNULL(T4."Dscription",
+	 ''),
+	 IFNULL(T4."U_TKA_Dimosiopoisi",
+	 '') --Case Bonding with RPC21 (Credit) 
+ 
+	UNION ALL SELECT
+	 T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T5."RefDocEntr" AS "DocEntry" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 0 AS "DocTotal",
+	 IFNULL(T4."OcrCode",
+	'') AS "OcrCode" ,
+	 0 AS "LineTotal",
+	 ROUND(((-1) * SUM(IFNULL(T4."LineTotal",
+	 0))),
+	 2) AS "Reverse",
+	 IFNULL(T1."Number",
+	0) AS "Number" ,
+	 IFNULL(T4."U_TKA_CatDapanis",
+	 '') AS "U_TKA_CatDapanis",
+	 IFNULL(T4."U_TKA_Event",
+	 '') AS "U_TKA_Event",
+	 IFNULL(T4."Project",
+	 '') AS "Project",
+	 IFNULL(T4."U_TKA_TyposSunedriou",
+	 '') AS "U_TKA_TyposSunedriou",
+	 IFNULL(T4."U_TKA_DAPANES",
+	 '') AS "U_TKA_DAPANES",
+	 IFNULL(T4."ItemCode",
+	 '') AS "ItemCode",
+	 IFNULL(T4."Dscription",
+	 '') AS "Dscription",
+	 IFNULL(T4."U_TKA_Dimosiopoisi",
+	 '') AS "U_TKA_Dimosiopoisi" 
+	FROM ORPC T3 
+	INNER JOIN RPC1 T4 ON T4."DocEntry" = T3."DocEntry" 
+	INNER JOIN RPC21 T5 ON T3."DocEntry" = T5."DocEntry" 
+	AND T5."RefObjType" = '22' 
+	INNER JOIN OPOR T0 ON T0."DocEntry" = T5."RefDocEntr" 
+	LEFT JOIN ( SELECT
+	 S1."DocEntry",
+	 S1."OcrCode",
+	 S2."Number" 
+		FROM POR1 S1 
+		LEFT JOIN "OOAT" S2 ON S2."AbsID" = S1."U_TKA_AgrNo" 
+		GROUP BY S1."DocEntry",
+	 S1."OcrCode",
+	 S2."Number") T1 ON T1."DocEntry" = T0."DocEntry" 
+	AND T1."OcrCode" = T4."OcrCode" 
+	WHERE IFNULL(T3.CANCELED,
+	 'N') = 'N' 
+	AND IFNULL(T0.CANCELED,
+	 'N') = 'N' 
+	GROUP BY T0."CardCode",
+	 T0."CardName",
+	 T0."LicTradNum",
+	 T5."RefDocEntr" ,
+	 T0."DocNum" ,
+	 T0."DocDate" ,
+	 T0."DocDueDate" ,
+	 T0."TaxDate" ,
+	 T0."NumAtCard" ,
+	 IFNULL(T4."OcrCode",
+	'') ,
+	 IFNULL(T1."Number",
+	0),
+	 IFNULL(T4."U_TKA_CatDapanis",
+	 ''),
+	 IFNULL(T4."U_TKA_Event",
+	 ''),
+	 IFNULL(T4."Project",
+	 ''),
+	 IFNULL(T4."U_TKA_TyposSunedriou",
+	 ''),
+	 IFNULL(T4."U_TKA_DAPANES",
+	 ''),
+	 IFNULL(T4."ItemCode",
+	 ''),
+	 IFNULL(T4."Dscription",
+	 ''),
+	 IFNULL(T4."U_TKA_Dimosiopoisi",
+	 '') )V 
+WHERE 1=1 --AND V."DocNum" = '120004762'--'120008301'
+
+GROUP BY "V"."CardCode",
+	 "V"."CardName",
+	 "V"."LicTradNum",
+	 "V"."DocEntry" ,
+	 "V"."DocNum" ,
+	 "V"."DocDate" ,
+	 "V"."DocDueDate" ,
+	 "V"."TaxDate" ,
+	 "V"."NumAtCard" ,
+	 "V"."OcrCode" ,
+	 "V"."Number" ,
+	 IFNULL("V"."U_TKA_CatDapanis",
+	 ''),
+	 IFNULL("V"."U_TKA_Event",
+	 ''),
+	 IFNULL("V"."Project",
+	 ''),
+	 IFNULL("V"."U_TKA_TyposSunedriou",
+	 ''),
+	 IFNULL("V"."U_TKA_DAPANES",
+	 ''),
+	 IFNULL("V"."ItemCode",
+	 ''),
+	 IFNULL("V"."Dscription",
+	 ''),
+	 IFNULL("V"."U_TKA_Dimosiopoisi",
+	 '') WITH READ ONLY
